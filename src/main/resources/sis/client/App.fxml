@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Accordion?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.paint.LinearGradient?>
+<?import javafx.scene.paint.Stop?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+
+<AnchorPane id="AnchorPane" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sis.client.AppController">
+   <children>
+      <BorderPane fx:id="borderPane" onDragEntered="#onDragEntered" onDragExited="#onDragExited" prefHeight="400.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <center>
+            <TabPane fx:id="tabPane" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
+               <tabs>
+                  <Tab fx:id="homeTab" closable="false" text="Home">
+                     <content>
+                        <StackPane>
+                           <children>
+                              <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Apache SIS">
+                                 <font>
+                                    <Font name="Sawasdee" size="96.0" />
+                                 </font>
+                                 <fill>
+                                    <LinearGradient endX="1.0">
+                                       <stops>
+                                          <Stop color="#4e92c9" />
+                                          <Stop color="#1b437c" offset="0.5037037037037038" />
+                                          <Stop color="#8bcce4" offset="0.6296296296296297" />
+                                          <Stop color="#8bcce4" offset="1.0" />
+                                       </stops>
+                                    </LinearGradient>
+                                 </fill>
+                              </Text>
+                           </children>
+                        </StackPane>
+                     </content>
+                  </Tab>
+                  <Tab fx:id="mapTab" text="Map">
+                    <content>
+                      <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+                    </content>
+                  </Tab>
+                  <Tab fx:id="fileTab" text="Files">
+                     <content>
+                        <fx:include source="dnd/dnd.fxml" />
+                     </content>
+                  </Tab>
+                  <Tab text="CRS">
+                    <content>
+                      <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                           <children>
+                              <Accordion layoutX="72.0" layoutY="59.0" prefHeight="288.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                <panes>
+                                  <TitledPane text="Registered">
+                                    <content>
+                                      <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+                                    </content>
+                                  </TitledPane>
+                                  <TitledPane text="Custom">
+                                    <content>
+                                      <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+                                    </content>
+                                  </TitledPane>
+                                </panes>
+                              </Accordion>
+                           </children>
+                        </AnchorPane>
+                    </content>
+                  </Tab>
+               </tabs>
+            </TabPane>
+         </center>
+         <top>
+            <fx:include fx:id="banner" source="banner/banner.fxml" />
+         </top></BorderPane>
+   </children>
+</AnchorPane>

@@ -1,0 +1,77 @@
+/* 
+    Created on : 1 Apr, 2017, 12:55:27 PM
+    Author     : Siddhesh Rane 
+*/
+
+.drag-pane {
+    -fx-padding: 10px;
+}
+
+.drag-pane.drag-hover {
+    -fx-border-color:  #387892;
+    -fx-border-width: 5px;
+    -fx-border-insets: 5px;
+    -fx-padding: 0px;
+}
+
+.drag-pane .drag-label { 
+    visibility:hidden;
+}
+
+.drag-hover .drag-label {
+    visibility: visible;
+    -fx-fill : #387892;
+}
+.drag-hover .content {
+    visibility: hidden;
+}
+
+.add-new  {
+    -fx-background-color: null;
+    -fx-text-fill: grey;
+    -fx-font-smoothing: gray;
+    -fx-padding: 5 15 5 15;
+}
+.add-new:hover {
+    -fx-text-fill:#499dbf;
+    -fx-border-color:#499dbf;
+    -fx-border-width: 5px;
+    -fx-padding: 0 10 0 10;
+}
+.add-new:focused {
+    -fx-text-fill:#387892;
+    -fx-border-color:#387892;
+    -fx-border-width: 5px;
+    -fx-padding: 0 10 0 10;
+}
+.add-new:pressed {
+    -fx-text-fill:derive(#387892, -20%);
+    -fx-border-color:derive(#387892, -20%);
+
+}
+
+.file-vbox {
+    -fx-alignment: top-center;
+    -fx-spacing: 4px;
+    -fx-padding: 5px;
+    -fx-focus-traversable:true;
+}
+.file-vbox:focused {
+    -fx-padding: 2px;
+    -fx-border-width:3px;
+    -fx-border-color:#387892;
+}
+.file-vbox .icon {
+    -fx-text-fill: #387892;
+    -fx-font-size: 2em;
+}
+.file-vbox:hover .icon {
+    -fx-text-fill: #499dbf;
+}
+.file-vbox .filename {
+    -fx-font: 14px 'Noto Sans';
+    -fx-fill: darkgrey;
+}
+.file-vbox .type {
+    -fx-fill: grey;
+}

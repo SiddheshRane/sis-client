@@ -1,0 +1,25 @@
+/* 
+    Created on : 29 Mar, 2017, 2:28:16 PM
+    Author     : Siddhesh Rane 
+*/
+* {
+    -banner-bg: #387892;
+    -banner-fg: ladder(-banner-bg, #ffffffaa 49%, #000000aa 50%);
+}
+.banner {
+    -fx-background-color: -banner-bg;
+}
+.heading {
+    -fx-font-family: Noto Sans;
+    -fx-font-size: 44px;
+    -fx-fill: -banner-fg;
+}
+.banner .username {
+    -fx-text-fill : derive(-banner-fg, -20%);
+}
+.banner .username:hover {
+    -fx-text-fill: ladder(-banner-fg, black 49%, white  50%);
+}
+.banner .online {
+    -fx-text-fill: derive(-banner-fg, 30%);
+}
