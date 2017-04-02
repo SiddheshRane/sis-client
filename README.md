@@ -15,10 +15,12 @@ This app is meant to demonstrate the capabilities of the library and to make it 
 ![polylines on map](screenshots/map-polyline.png)
 Ability to draw a polygon on the map 
 
-![shapes on map](screenshots/map-shapes-and-markers.png "Different Shapes on map")
+![shapes on map](screenshots/map-shapes-and-markers.png "Different Shapes on map")  
+
 As well as markers and different shapes
 
-![file input](screenshots/file-correct-mime-type.png "Ability to drop input files and have their mime type correctly detected")
+![file input](screenshots/file-correct-mime-type.png "Ability to drop input files and have their mime type correctly detected")  
+
 Drag and drop file functionality with correct mime type detection
 
 **...and more coming up**
@@ -28,3 +30,8 @@ Drag and drop file functionality with correct mime type detection
 - JavaFX version 8u60
 - [Apache SIS](http://sis.apache.org/) 
 - [GMapsFX](http://rterp.github.io/GMapsFX/ ) by [Rob Terpilowski](https://github.com/rterp) 
+
+## Build
+
+Standard maven build. Open in NetBeans.
+SIS version used in `pom.xml` is 0.8-SNAPSHOT which was locally built on my pc from source. You may change that. 
