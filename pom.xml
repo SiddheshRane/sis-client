@@ -119,7 +119,7 @@
         <dependency>
             <groupId>org.apache.sis.storage</groupId>
             <artifactId>sis-storage</artifactId>
-            <version>0.8-SNAPSHOT</version>
+            <version>0.8-jdk8-SNAPSHOT</version>
         </dependency>
     </dependencies>
 </project>

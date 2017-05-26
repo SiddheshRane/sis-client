@@ -6,12 +6,15 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
-import java.util.Collections;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javafx.animation.FadeTransition;
+import javafx.collections.FXCollections;
+import javafx.collections.MapChangeListener;
+import javafx.collections.ObservableMap;
+import javafx.collections.ObservableSet;
+import javafx.collections.SetChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
@@ -25,7 +28,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
-import javafx.util.Duration;
 import org.apache.sis.storage.DataStoreException;
 import org.apache.sis.storage.DataStores;
 
@@ -44,20 +46,82 @@ public class DndController implements Initializable {
     private Text message;
     @FXML
     Button addNew;
-    FadeTransition fadeTransition;
+
+    private final ObservableSet<File> draggedFiles = FXCollections.observableSet();
+    private final ObservableMap<File, Node> fileNodeMap = FXCollections.observableHashMap();
+
+    public DndController() {
+        draggedFiles.addListener(new SetChangeListener<File>() {
+            @Override
+            public void onChanged(SetChangeListener.Change<? extends File> change) {
+                if (change.wasAdded()) {
+                    File added = change.getElementAdded();
+                    fileNodeMap.put(added, createDisplayNode(added));
+                }
+                if (change.wasRemoved()) {
+                    File removed = change.getElementRemoved();
+                    fileNodeMap.remove(removed);
+                }
+            }
+        });
+        fileNodeMap.addListener(new MapChangeListener<File, Node>() {
+            @Override
+            public void onChanged(MapChangeListener.Change<? extends File, ? extends Node> change) {
+                if (change.wasAdded()) {
+                    final Node valueAdded = change.getValueAdded();
+                    itemListing.getChildren().add(valueAdded);
+                }
+                if (change.wasRemoved()) {
+                    Node removedNode = change.getValueRemoved();
+                    itemListing.getChildren().remove(removedNode);
+                }
+            }
+        });
+    }
 
     /**
-     * Initializes the controller class.
+     * This function generates a graphical {@code Node} to represent
+     * {@code file} in the scene graph. The implementation can customize the
+     * appearance based on the file provided. TODO: this function should be
+     * provided as a callback by users of this class.
+     *
+     * @param file the file that needs to be represented
+     * @return a new Node to add to the
      */
-    @Override
-    public void initialize(URL url, ResourceBundle rb) {
-        fadeTransition = new FadeTransition(Duration.millis(200), message);
-        addNew.setOnAction(me->{
-            FileChooser fileChooser = new FileChooser();
-            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Well KNown Text", "*.wkt"));
-            File file = fileChooser.showOpenDialog(dragPane.getScene().getWindow());
-            addFiles(Collections.singletonList(file));
-        });
+    public Node createDisplayNode(File file) {
+        final Label icon = AwesomeDude.createIconLabel(AwesomeIcon.FILE, "45");
+        icon.getStyleClass().add("icon");
+        Text filename = new Text(file.getName());
+        filename.getStyleClass().add("filename");
+
+        String mime = "N/A";
+        try {
+            mime = DataStores.probeContentType(file);
+            if (mime == null) {
+                mime = Files.probeContentType(file.toPath());
+            }
+        } catch (DataStoreException ex) {
+            mime = "N/A";
+        } catch (IOException ex) {
+            Logger.getLogger(DndController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        Text type = new Text(mime);
+        type.getStyleClass().add("mime");
+        VBox vBox = new VBox(icon, filename, type);
+        vBox.getStyleClass().add("file-vbox");
+        fileNodeMap.put(file, vBox);
+        return vBox;
+    }
+
+    /**
+     * Get an @code ObservableSet of files that have been dragged to this dnd
+     * pane. The returned set is mutable and live.
+     *
+     * @return mutable observable set of files
+     */
+    public ObservableSet<File> getDraggedFiles() {
+        return draggedFiles;
     }
 
     @FXML
@@ -86,41 +150,27 @@ public class DndController implements Initializable {
         Dragboard dragboard = de.getDragboard();
         if (dragboard.hasFiles()) {
             List<File> files = dragboard.getFiles();
-            addFiles(files);
+            getDraggedFiles().addAll(files);
             de.setDropCompleted(true);
             de.consume();
         }
     }
 
-    public void addFiles(List<File> files) {
-        for (File file : files) {
-            String mime = "N/A";
-            try {
-                mime = DataStores.probeContentType(file);
-                if (mime == null) {
-                    mime = Files.probeContentType(file.toPath());
-                }
-            } catch (DataStoreException ex) {
-                mime = "N/A";
-            } catch (IOException ex) {
-                Logger.getLogger(DndController.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            
-            Node vBox = getFileNode(file, mime);
-            itemListing.getChildren().add(vBox);
-        }
-    }
-
-    private Node getFileNode(File file, String mime) {
-        final Label icon = AwesomeDude.createIconLabel(AwesomeIcon.FILE, "45");
-        icon.getStyleClass().add("icon");
-        Text filename = new Text(file.getName());
-        filename.getStyleClass().add("filename");
-        Text type = new Text(mime);
-        type.getStyleClass().add("mime");
-        VBox vBox = new VBox(icon, filename, type);
-        vBox.getStyleClass().add("file-vbox");
-        return vBox;
+    /**
+     * Initializes the controller class.
+     */
+    @Override
+    public void initialize(URL url, ResourceBundle rb) {
+        addNew.setOnAction(me -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.getExtensionFilters().addAll(
+                    new FileChooser.ExtensionFilter("Well Known Text", "*.wkt"),
+                    new FileChooser.ExtensionFilter("NetCDF", "*.nc"),
+                    new FileChooser.ExtensionFilter("Any type", "*")
+            );
+            File file = fileChooser.showOpenDialog(dragPane.getScene().getWindow());
+            getDraggedFiles().add(file);
+        });
     }
 
 }

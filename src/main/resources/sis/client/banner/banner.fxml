@@ -25,7 +25,7 @@
       <StackPane HBox.hgrow="ALWAYS" />
       <ImageView cache="true" cacheHint="QUALITY" fitHeight="69.0" fitWidth="69.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true">
          <image>
-            <Image url="@../../../sis-logo.png" />
+            <Image url="@../../../sis-logo-128.png" />
          </image>
          <HBox.margin>
             <Insets bottom="5.0" top="5.0" />
