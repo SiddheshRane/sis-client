@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableMap;
@@ -28,6 +30,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
+import javafx.util.Callback;
 import org.apache.sis.storage.DataStoreException;
 import org.apache.sis.storage.DataStores;
 
@@ -49,14 +52,28 @@ public class DndController implements Initializable {
 
     private final ObservableSet<File> draggedFiles = FXCollections.observableSet();
     private final ObservableMap<File, Node> fileNodeMap = FXCollections.observableHashMap();
+    private final ObjectProperty<Callback<File, Node>> fileNodeFactory = new SimpleObjectProperty<>();
+
+    public Callback<File, Node> getFileNodeFactory() {
+        return fileNodeFactory.get();
+    }
+
+    public void setFileNodeFactory(Callback<File,Node> value) {
+        fileNodeFactory.set(value);
+    }
+
+    public ObjectProperty fileNodeFactoryProperty() {
+        return fileNodeFactory;
+    }
 
     public DndController() {
+
         draggedFiles.addListener(new SetChangeListener<File>() {
             @Override
             public void onChanged(SetChangeListener.Change<? extends File> change) {
                 if (change.wasAdded()) {
                     File added = change.getElementAdded();
-                    fileNodeMap.put(added, createDisplayNode(added));
+                    fileNodeMap.put(added, fileNodeFactory.get().call(added));
                 }
                 if (change.wasRemoved()) {
                     File removed = change.getElementRemoved();
@@ -79,40 +96,6 @@ public class DndController implements Initializable {
         });
     }
 
-    /**
-     * This function generates a graphical {@code Node} to represent
-     * {@code file} in the scene graph. The implementation can customize the
-     * appearance based on the file provided. TODO: this function should be
-     * provided as a callback by users of this class.
-     *
-     * @param file the file that needs to be represented
-     * @return a new Node to add to the
-     */
-    public Node createDisplayNode(File file) {
-        final Label icon = AwesomeDude.createIconLabel(AwesomeIcon.FILE, "45");
-        icon.getStyleClass().add("icon");
-        Text filename = new Text(file.getName());
-        filename.getStyleClass().add("filename");
-
-        String mime = "N/A";
-        try {
-            mime = DataStores.probeContentType(file);
-            if (mime == null) {
-                mime = Files.probeContentType(file.toPath());
-            }
-        } catch (DataStoreException ex) {
-            mime = "N/A";
-        } catch (IOException ex) {
-            Logger.getLogger(DndController.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        Text type = new Text(mime);
-        type.getStyleClass().add("mime");
-        VBox vBox = new VBox(icon, filename, type);
-        vBox.getStyleClass().add("file-vbox");
-        fileNodeMap.put(file, vBox);
-        return vBox;
-    }
 
     /**
      * Get an @code ObservableSet of files that have been dragged to this dnd
