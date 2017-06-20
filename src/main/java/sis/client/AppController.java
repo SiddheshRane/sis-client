@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.util.Collection;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.TimeZone;
@@ -27,7 +28,6 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextArea;
-import javafx.scene.effect.BoxBlur;
 import javafx.scene.effect.GaussianBlur;
 import javafx.scene.input.DragEvent;
 import javafx.scene.layout.BorderPane;
@@ -38,6 +38,7 @@ import javafx.scene.text.Text;
 import javafx.util.Duration;
 import org.apache.sis.setup.About;
 import org.apache.sis.storage.DataStoreException;
+import org.apache.sis.storage.DataStoreProvider;
 import org.apache.sis.storage.DataStores;
 import org.apache.sis.util.collection.TreeTableFormat;
 import sis.client.banner.BannerController;
@@ -82,10 +83,10 @@ public class AppController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         mapTab.setContent(map);
         dndController.setFileNodeFactory(this::createDisplayNode);
-        
+
         GaussianBlur blur = new GaussianBlur(20);
         diagnosticsText.setEffect(blur);
-        
+
         Timeline timeline = new Timeline(new KeyFrame(Duration.millis(2100), new KeyValue(blur.radiusProperty(), 0)));
         FadeTransition bannerFade = new FadeTransition(Duration.millis(2100), bannerText);
         bannerFade.setToValue(0);
@@ -106,10 +107,11 @@ public class AppController implements Initializable {
     private void generateDiagnostics() {
         TreeTableFormat tf = new TreeTableFormat(Locale.getDefault(), TimeZone.getDefault());
         String info = tf.format(About.configuration());
-//        diagnosticsText.appendText("VERSION\n");
         diagnosticsText.appendText(info);
-//        diagnosticsText.appendText("\nPATHS\n");
-//        diagnosticsText.appendText("\nPLUGINS\n");
+        Collection<DataStoreProvider> providers = DataStores.providers();
+        for (DataStoreProvider provider : providers) {
+            diagnosticsText.appendText("\n" + provider.getShortName() + " " + provider.getFormat());
+        }
     }
 
     public AppController() {
@@ -174,4 +176,12 @@ public class AppController implements Initializable {
         });
         return vBox;
     }
+
+    
+//    private void createCRSTable() {
+//        FXCRSTable table = new FXCRSTable();
+//        Tab tab = new Tab("CRS");
+//        tab.setContent(table);
+//        tabPane.getTabs().add(tab);
+//    }
 }

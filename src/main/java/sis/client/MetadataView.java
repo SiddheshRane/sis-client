@@ -44,21 +44,24 @@ public class MetadataView extends StackPane {
     TextArea textArea = new TextArea();
     File file;
 
-    Accordion accordion = new  Accordion();
+    Accordion accordion = new Accordion();
     TreeTableView<TreeTable.Node> treeTableView = new TreeTableView<>();
 
     public MetadataView(File file) {
         this.file = file;
         executor = Executors.newCachedThreadPool();
-        
+
         treeTableView.setTableMenuButtonVisible(true);
         TitledPane textPane = new TitledPane("Text", textArea);
         TitledPane ttvPane = new TitledPane("Tree Table", treeTableView);
         ttvPane.setExpanded(true);
-        accordion.getPanes().addAll(textPane,ttvPane);
-        
+        accordion.getPanes().addAll(textPane, ttvPane);
+        accordion.setExpandedPane(ttvPane);
+
         getChildren().add(accordion);
+        textArea.setEditable(false);
         textArea.setPromptText("Loading metadata...");
+        
         Runnable metadataRetriever = new Runnable() {
             @Override
             public void run() {
@@ -79,12 +82,7 @@ public class MetadataView extends StackPane {
             }
         };
         executor.submit(metadataRetriever);
-        initTreeTableView();
-    }
-    public final ExecutorService executor;
-
-    private void initTreeTableView() {
-        Runnable metadataRetriever = new Runnable() {
+        Runnable metadataRetriever1 = new Runnable() {
             @Override
             public void run() {
                 TreeTable tree;
@@ -97,8 +95,10 @@ public class MetadataView extends StackPane {
                 }
             }
         };
-        executor.submit(metadataRetriever);
+        executor.submit(metadataRetriever1);
     }
+    public final ExecutorService executor;
+
 
     private void populateTreeTableView(TreeTable treeTable) {
         List<TableColumn<?>> columns = treeTable.getColumns();

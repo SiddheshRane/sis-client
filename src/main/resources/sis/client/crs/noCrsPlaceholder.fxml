@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+<?import org.controlsfx.control.ToggleSwitch?>
+
+
+<StackPane prefHeight="139.0" prefWidth="429.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <Text fill="#868686" strokeType="OUTSIDE" strokeWidth="0.0" text="No Coordinate Reference Systems found">
+         <font>
+            <Font name="Ubuntu Condensed" size="29.0" />
+         </font>
+      </Text>
+      <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Try setting SIS_DATA variable" StackPane.alignment="BOTTOM_CENTER">
+         <font>
+            <Font name="Ubuntu Light" size="17.0" />
+         </font>
+      </Text>
+      <ToggleSwitch maxHeight="20.0" maxWidth="30.0" StackPane.alignment="TOP_RIGHT" />
+   </children>
+   <padding>
+      <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+   </padding>
+</StackPane>
