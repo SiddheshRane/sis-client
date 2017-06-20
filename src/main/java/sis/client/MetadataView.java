@@ -1,6 +1,8 @@
 package sis.client;
 
 import java.io.File;
+import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
@@ -9,9 +11,18 @@ import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
+import javafx.beans.property.ReadOnlyProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ObservableValue;
+import javafx.scene.control.Accordion;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.TitledPane;
+import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeTableColumn;
+import javafx.scene.control.TreeTableView;
 import javafx.scene.layout.StackPane;
+import javafx.util.Callback;
 import org.apache.sis.metadata.KeyNamePolicy;
 import org.apache.sis.metadata.MetadataStandard;
 import org.apache.sis.metadata.ValueExistencePolicy;
@@ -33,10 +44,20 @@ public class MetadataView extends StackPane {
     TextArea textArea = new TextArea();
     File file;
 
+    Accordion accordion = new  Accordion();
+    TreeTableView<TreeTable.Node> treeTableView = new TreeTableView<>();
+
     public MetadataView(File file) {
         this.file = file;
         executor = Executors.newCachedThreadPool();
-        getChildren().add(textArea);
+        
+        treeTableView.setTableMenuButtonVisible(true);
+        TitledPane textPane = new TitledPane("Text", textArea);
+        TitledPane ttvPane = new TitledPane("Tree Table", treeTableView);
+        ttvPane.setExpanded(true);
+        accordion.getPanes().addAll(textPane,ttvPane);
+        
+        getChildren().add(accordion);
         textArea.setPromptText("Loading metadata...");
         Runnable metadataRetriever = new Runnable() {
             @Override
@@ -49,8 +70,6 @@ public class MetadataView extends StackPane {
                     final TreeTableFormat tf = new TreeTableFormat(Locale.getDefault(), TimeZone.getDefault());
                     tf.setColumns(TableColumn.NAME, TableColumn.VALUE);
                     text = tf.format(tree);
-//                    text = traverseMap(map);
-
                 } catch (DataStoreException ex) {
                     Logger.getLogger(MetadataView.class.getName()).log(Level.SEVERE, null, ex);
                     text = ex.getMessage();
@@ -60,8 +79,55 @@ public class MetadataView extends StackPane {
             }
         };
         executor.submit(metadataRetriever);
+        initTreeTableView();
     }
     public final ExecutorService executor;
+
+    private void initTreeTableView() {
+        Runnable metadataRetriever = new Runnable() {
+            @Override
+            public void run() {
+                TreeTable tree;
+                try (DataStore ds = DataStores.open(file)) {
+                    Metadata metadata = ds.getMetadata();
+                    tree = MetadataStandard.ISO_19115.asTreeTable(metadata, Metadata.class, ValueExistencePolicy.COMPACT);
+                    Platform.runLater(() -> populateTreeTableView(tree));
+                } catch (DataStoreException ex) {
+                    Logger.getLogger(MetadataView.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        };
+        executor.submit(metadataRetriever);
+    }
+
+    private void populateTreeTableView(TreeTable treeTable) {
+        List<TableColumn<?>> columns = treeTable.getColumns();
+        for (TableColumn<?> column : columns) {
+            TreeTableColumn<TreeTable.Node, String> treeTableColumn = new TreeTableColumn<>(column.getHeader().toString());
+            treeTableColumn.setCellValueFactory((param) -> {
+                Object value = param.getValue().getValue().getValue(column);
+                if (value == null) {
+                    value = "";
+                }
+                return new SimpleStringProperty(value.toString());
+            });
+            treeTableView.getColumns().add(treeTableColumn);
+        }
+        TreeItem<TreeTable.Node> rootItem = createTreeItem(treeTable.getRoot());
+        treeTableView.setRoot(rootItem);
+    }
+
+    private TreeItem<TreeTable.Node> createTreeItem(TreeTable.Node root) {
+        TreeItem<TreeTable.Node> rootItem = new TreeItem<>(root);
+        if (!root.isLeaf()) {
+            Collection<TreeTable.Node> children = root.getChildren();
+            for (TreeTable.Node child : children) {
+                TreeItem<TreeTable.Node> childItem = createTreeItem(child);
+                rootItem.getChildren().add(childItem);
+            }
+        }
+        return rootItem;
+    }
 
     public static String traverseMap(Map<String, Object> map) {
         String str = "";
