@@ -14,7 +14,6 @@ public class MainApp extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         final URL resource = MainApp.class.getResource("App.fxml");
-//        URL resource = DragndropController.class.getResource("dragndrop.fxml");
         System.out.println("resource = " + resource);
         Parent root = FXMLLoader.load(resource);
         
