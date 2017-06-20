@@ -19,6 +19,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyEvent;
 import org.opengis.referencing.crs.CRSAuthorityFactory;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.util.FactoryException;
@@ -52,11 +53,19 @@ public class CrsController implements Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-
+        table.addEventFilter(KeyEvent.KEY_PRESSED ,ke-> {
+            if (ke.getCode().isLetterKey() || ke.getCode().isDigitKey()) {
+                System.out.println("ke = " + ke);
+                filter.requestFocus();
+                filter.fireEvent(ke.copyFor(filter, filter));
+                ke.consume();
+            }
+        }
+);
         code.setCellValueFactory((TableColumn.CellDataFeatures<Code, String> param) -> new SimpleStringProperty(param.getValue().getCode()));
         description.setCellValueFactory((TableColumn.CellDataFeatures<Code, String> param) -> new SimpleStringProperty(param.getValue().getDescription()));
 
-        Predicate<Code> predicate = (c) -> filter.getText().isEmpty() || c.getCode().contains(filter.getText());
+        Predicate<Code> predicate = (c) -> filter.getText().isEmpty() || c.getCode().toLowerCase().contains(filter.getText().toLowerCase());
         ObjectBinding<Predicate<Code>> predicateBinding
                 = Bindings.<Predicate<Code>>createObjectBinding(() -> predicate, filter.textProperty());
         filteredCodes.predicateProperty().bind(predicateBinding);
