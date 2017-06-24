@@ -1,10 +1,10 @@
 package sis.client;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.control.TreeItem;
@@ -62,13 +62,15 @@ public class MetadataView extends StackPane {
     }
 
     private void populateTreeTableView(TreeTable treeTable) {
-        List<TableColumn<?>> columns = Arrays.asList(TableColumn.NAME, TableColumn.VALUE);
+        List<TableColumn<?>> columns = treeTable.getColumns().stream().filter((t) -> {
+            return TableColumn.NAME.equals(t) || TableColumn.VALUE.equals(t) || TableColumn.VALUE_AS_TEXT.equals(t);
+        }).collect(Collectors.toList());
         for (TableColumn<?> column : columns) {
             TreeTableColumn<TreeTable.Node, String> treeTableColumn = new TreeTableColumn<>(column.getHeader().toString());
             treeTableColumn.setCellValueFactory((param) -> {
                 Object value = param.getValue().getValue().getValue(column);
                 if (value == null) {
-                    value = "<empty>";
+                    value = "";
                 }
                 return new SimpleStringProperty(value.toString());
             });
