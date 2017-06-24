@@ -23,8 +23,10 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import org.apache.sis.setup.About;
 import org.apache.sis.storage.DataStoreException;
 import org.apache.sis.storage.DataStores;
+import org.apache.sis.util.collection.TreeTable;
 import sis.client.banner.BannerController;
 import sis.client.dnd.DndController;
 import sis.client.map.Map;
@@ -68,7 +70,9 @@ public class AppController implements Initializable {
     }
 
     private void generateDiagnostics() {
-        
+        final TreeTable configuration = About.configuration();
+        MetadataView sisabout = new MetadataView(configuration);
+        homePane.getChildren().add(sisabout);
     }
 
     public AppController() {

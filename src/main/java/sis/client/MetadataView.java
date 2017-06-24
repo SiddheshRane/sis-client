@@ -32,6 +32,7 @@ public class MetadataView extends StackPane {
     public MetadataView(TreeTable metadata) {
         this.metadata = metadata;
         getChildren().add(treeTableView);
+        treeTableView.setColumnResizePolicy(TreeTableView.CONSTRAINED_RESIZE_POLICY);
         if (metadata != null) {
             populateTreeTableView(metadata);
         }
@@ -67,7 +68,7 @@ public class MetadataView extends StackPane {
             treeTableColumn.setCellValueFactory((param) -> {
                 Object value = param.getValue().getValue().getValue(column);
                 if (value == null) {
-                    value = "";
+                    value = "<empty>";
                 }
                 return new SimpleStringProperty(value.toString());
             });
