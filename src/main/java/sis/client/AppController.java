@@ -6,19 +6,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
-import java.util.Collection;
-import java.util.Locale;
 import java.util.ResourceBundle;
-import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javafx.animation.FadeTransition;
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.ParallelTransition;
-import javafx.animation.Timeline;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
@@ -27,20 +17,14 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
-import javafx.scene.control.TextArea;
-import javafx.scene.effect.GaussianBlur;
 import javafx.scene.input.DragEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
-import javafx.util.Duration;
-import org.apache.sis.setup.About;
 import org.apache.sis.storage.DataStoreException;
-import org.apache.sis.storage.DataStoreProvider;
 import org.apache.sis.storage.DataStores;
-import org.apache.sis.util.collection.TreeTableFormat;
 import sis.client.banner.BannerController;
 import sis.client.dnd.DndController;
 import sis.client.map.Map;
@@ -74,44 +58,17 @@ public class AppController implements Initializable {
 
     @FXML
     StackPane homePane;
-    @FXML
-    Text bannerText;
-    @FXML
-    TextArea diagnosticsText;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         mapTab.setContent(map);
         dndController.setFileNodeFactory(this::createDisplayNode);
 
-        GaussianBlur blur = new GaussianBlur(20);
-        diagnosticsText.setEffect(blur);
-
-        Timeline timeline = new Timeline(new KeyFrame(Duration.millis(2100), new KeyValue(blur.radiusProperty(), 0)));
-        FadeTransition bannerFade = new FadeTransition(Duration.millis(2100), bannerText);
-        bannerFade.setToValue(0);
-        bannerFade.setOnFinished(ae -> homePane.getChildren().remove(bannerText));
-        ParallelTransition introTransition = new ParallelTransition(bannerFade, timeline);
-        homePane.hoverProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-                if (newValue) {
-                    introTransition.playFromStart();
-                    observable.removeListener(this);
-                }
-            }
-        });
         generateDiagnostics();
     }
 
     private void generateDiagnostics() {
-        TreeTableFormat tf = new TreeTableFormat(Locale.getDefault(), TimeZone.getDefault());
-        String info = tf.format(About.configuration());
-        diagnosticsText.appendText(info);
-        Collection<DataStoreProvider> providers = DataStores.providers();
-        for (DataStoreProvider provider : providers) {
-            diagnosticsText.appendText("\n" + provider.getShortName() + " " + provider.getFormat());
-        }
+        
     }
 
     public AppController() {

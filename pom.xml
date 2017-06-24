@@ -112,6 +112,12 @@
             <type>jar</type>
             <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.sis.core</groupId>
+            <artifactId>sis-utility</artifactId>
+            <version>0.8-jdk8-SNAPSHOT</version>
+            <type>jar</type>
+        </dependency>
     </dependencies>
     <description>A JavaFX desktop app for editing Metadata, CRS and coordinate transformations</description>
 </project>
