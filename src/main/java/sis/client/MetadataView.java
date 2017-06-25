@@ -1,16 +1,26 @@
 package sis.client;
 
 import java.io.File;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javafx.application.Platform;
-import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.FXCollections;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.Spinner;
 import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeTableCell;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableView;
 import javafx.scene.layout.StackPane;
+import javafx.util.StringConverter;
 import org.apache.sis.metadata.MetadataStandard;
 import org.apache.sis.metadata.ValueExistencePolicy;
 import org.apache.sis.storage.DataStore;
@@ -19,6 +29,7 @@ import org.apache.sis.storage.DataStores;
 import org.apache.sis.util.collection.TableColumn;
 import org.apache.sis.util.collection.TreeTable;
 import org.opengis.metadata.Metadata;
+import org.opengis.util.ControlledVocabulary;
 
 /**
  *
@@ -63,16 +74,19 @@ public class MetadataView extends StackPane {
 
     private void populateTreeTableView(TreeTable treeTable) {
         List<TableColumn<?>> columns = treeTable.getColumns().stream().filter((t) -> {
-            return TableColumn.NAME.equals(t) || TableColumn.VALUE.equals(t) || TableColumn.VALUE_AS_TEXT.equals(t);
+            return TableColumn.NAME.equals(t) || TableColumn.VALUE.equals(t) || TableColumn.VALUE_AS_TEXT.equals(t) || TableColumn.TYPE.equals(t);
         }).collect(Collectors.toList());
         for (TableColumn<?> column : columns) {
-            TreeTableColumn<TreeTable.Node, String> treeTableColumn = new TreeTableColumn<>(column.getHeader().toString());
+            TreeTableColumn<TreeTable.Node, Object> treeTableColumn = new TreeTableColumn<>(column.getHeader().toString());
             treeTableColumn.setCellValueFactory((param) -> {
                 Object value = param.getValue().getValue().getValue(column);
                 if (value == null) {
                     value = "";
                 }
-                return new SimpleStringProperty(value.toString());
+                return new SimpleObjectProperty(value);
+            });
+            treeTableColumn.setCellFactory((param) -> {
+                return new MetadataCell();
             });
             treeTableView.getColumns().add(treeTableColumn);
         }
@@ -100,5 +114,57 @@ public class MetadataView extends StackPane {
             str += key + "\t\t" + value.getClass().getSimpleName() + "\t" + value.toString() + "\n";
         }
         return str;
+    }
+
+    private static class MetadataCell extends TreeTableCell<TreeTable.Node, Object> {
+
+        public MetadataCell() {
+        }
+
+        @Override
+        protected void updateItem(Object item, boolean empty) {
+            super.updateItem(item, empty);
+            if (empty) {
+                setGraphic(null);
+                setText("");
+                return;
+            }
+            setText("");
+            if (item instanceof ControlledVocabulary) {
+                ControlledVocabulary vocab = (ControlledVocabulary) item;
+                final ComboBox<ControlledVocabulary> comboBox
+                        = new ComboBox(FXCollections.<ControlledVocabulary>observableArrayList(vocab.family()));
+                comboBox.setConverter(new StringConverter<ControlledVocabulary>() {
+                    @Override
+                    public String toString(ControlledVocabulary object) {
+                        return object.name();
+                    }
+
+                    @Override
+                    public ControlledVocabulary fromString(String string) {
+                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    }
+                });
+                comboBox.getSelectionModel().select(vocab);
+                setGraphic(comboBox);
+            } else if (item instanceof Boolean) {
+                final CheckBox checkBox = new CheckBox();
+                checkBox.setSelected((Boolean) item);
+                setGraphic(checkBox);
+            } else if (item instanceof Double) {
+                setGraphic(new Spinner(Double.MIN_VALUE, Double.MAX_VALUE, (double) item));
+            } else if (item instanceof Integer) {
+                setGraphic(new Spinner(Integer.MIN_VALUE, Integer.MAX_VALUE, (int) item));
+            } else if (item instanceof Date) {
+                Date d = (Date) item;
+                LocalDate date = d.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                DatePicker datePicker = new DatePicker(date);
+                setGraphic(datePicker);
+            } else {
+                setGraphic(null);
+                setText(item.toString());
+            }
+        }
+
     }
 }
