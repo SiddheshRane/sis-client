@@ -7,7 +7,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
@@ -27,6 +26,10 @@ import org.apache.sis.storage.DataStore;
 import org.apache.sis.storage.DataStoreException;
 import org.apache.sis.storage.DataStores;
 import org.apache.sis.util.collection.TableColumn;
+import static org.apache.sis.util.collection.TableColumn.NAME;
+import static org.apache.sis.util.collection.TableColumn.TYPE;
+import static org.apache.sis.util.collection.TableColumn.VALUE;
+import static org.apache.sis.util.collection.TableColumn.VALUE_AS_TEXT;
 import org.apache.sis.util.collection.TreeTable;
 import org.opengis.metadata.Metadata;
 import org.opengis.util.ControlledVocabulary;
@@ -74,26 +77,55 @@ public class MetadataView extends StackPane {
     }
 
     private void populateTreeTableView(TreeTable treeTable) {
-        List<TableColumn<?>> columns = treeTable.getColumns().stream().filter((t) -> {
-            return TableColumn.NAME.equals(t) || TableColumn.VALUE.equals(t) || TableColumn.VALUE_AS_TEXT.equals(t) || TableColumn.TYPE.equals(t);
-        }).collect(Collectors.toList());
-        for (TableColumn<?> column : columns) {
-            TreeTableColumn<TreeTable.Node, Object> treeTableColumn = new TreeTableColumn<>(column.getHeader().toString());
-            treeTableColumn.setCellValueFactory((param) -> {
-                Object value = param.getValue().getValue().getValue(column);
-                if (value == null) {
-                    value = param.getValue().getValue().getUserObject();
-                    if (value != null) {
-                        value = value.getClass();
-                    } else value = "";
-                }
+        List<TableColumn<?>> columns = treeTable.getColumns();
+
+        //NAME column
+        TreeTableColumn<TreeTable.Node, Object> nameColumn = new TreeTableColumn<>(NAME.getHeader().toString());
+        nameColumn.setCellValueFactory((param) -> {
+            Object value = param.getValue().getValue().getValue(NAME);
+            value = value == null ? "" : value;
+            return new SimpleObjectProperty(value);
+        });
+        treeTableView.getColumns().add(nameColumn);
+
+        //TEXT column
+        if (columns.contains(VALUE_AS_TEXT)) {
+            TreeTableColumn<TreeTable.Node, Object> textColumn = new TreeTableColumn<>(VALUE_AS_TEXT.getHeader().toString());
+            textColumn.setCellValueFactory((param) -> {
+                Object value = param.getValue().getValue().getValue(VALUE_AS_TEXT);
+                value = value == null ? "" : value;
                 return new SimpleObjectProperty(value);
             });
-            treeTableColumn.setCellFactory((param) -> {
+            treeTableView.getColumns().add(textColumn);
+        }
+
+        //VALUE column
+        if (columns.contains(VALUE)) {
+            TreeTableColumn<TreeTable.Node, Object> valueColumn = new TreeTableColumn<>(VALUE.getHeader().toString());
+            valueColumn.setCellValueFactory((param) -> {
+                Object value = param.getValue().getValue().getValue(VALUE);
+                value = value == null ? "" : value;
+                return new SimpleObjectProperty(value);
+            });
+            valueColumn.setCellFactory((param) -> {
                 return new MetadataCell();
             });
-            treeTableView.getColumns().add(treeTableColumn);
+            treeTableView.getColumns().add(valueColumn);
         }
+
+        if (columns.contains(TYPE)) {
+            TreeTableColumn<TreeTable.Node, Object> typeColumn = new TreeTableColumn<>(TYPE.getHeader().toString());
+            typeColumn.setCellValueFactory((param) -> {
+                String type = param.getValue().getValue().getValue(TYPE).toString();
+                Object value = param.getValue().getValue().getUserObject();
+                if (value != null) {
+                    type += '\n'+value.getClass().toString();
+                }
+                return new SimpleObjectProperty(type);
+            });
+            treeTableView.getColumns().add(typeColumn);
+        }
+
         TreeItem<TreeTable.Node> rootItem = createTreeItem(treeTable.getRoot());
         treeTableView.setRoot(rootItem);
     }
