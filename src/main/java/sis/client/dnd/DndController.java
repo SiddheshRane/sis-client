@@ -48,7 +48,7 @@ public class DndController implements Initializable {
         return fileNodeFactory.get();
     }
 
-    public void setFileNodeFactory(Callback<File,Node> value) {
+    public void setFileNodeFactory(Callback<File, Node> value) {
         fileNodeFactory.set(value);
     }
 
@@ -85,7 +85,6 @@ public class DndController implements Initializable {
             }
         });
     }
-
 
     /**
      * Get an @code ObservableSet of files that have been dragged to this dnd
@@ -142,7 +141,9 @@ public class DndController implements Initializable {
                     new FileChooser.ExtensionFilter("Any type", "*")
             );
             File file = fileChooser.showOpenDialog(dragPane.getScene().getWindow());
-            getDraggedFiles().add(file);
+            if (file != null) {
+                getDraggedFiles().add(file);
+            }
         });
     }
 

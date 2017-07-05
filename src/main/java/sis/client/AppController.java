@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.ResourceBundle;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.fxml.FXML;
@@ -26,6 +27,7 @@ import javafx.scene.text.Text;
 import org.apache.sis.setup.About;
 import org.apache.sis.storage.DataStoreException;
 import org.apache.sis.storage.DataStores;
+import org.apache.sis.util.collection.TableColumn;
 import org.apache.sis.util.collection.TreeTable;
 import sis.client.banner.BannerController;
 import sis.client.dnd.DndController;
@@ -66,12 +68,29 @@ public class AppController implements Initializable {
         mapTab.setContent(map);
         dndController.setFileNodeFactory(this::createDisplayNode);
 
-        generateDiagnostics();
+        initAbout();
     }
 
-    private void generateDiagnostics() {
+    private void initAbout() {
         final TreeTable configuration = About.configuration();
         MetadataView sisabout = new MetadataView(configuration);
+        sisabout.setExpandNode(new Predicate<TreeTable.Node>() {
+            @Override
+            public boolean test(TreeTable.Node node) {
+                if (node.getParent() == null) {
+                    return true;
+                }
+                CharSequence name = node.getValue(TableColumn.NAME);
+                switch (name.toString()) {
+                    case "Versions":
+                    case "Localization":
+                    case "Locale":
+                    case "Timezone":
+                        return true;
+                }
+                return false;
+            }
+        });
         homePane.getChildren().add(sisabout);
     }
 
@@ -95,7 +114,22 @@ public class AppController implements Initializable {
     public void openMetadataTab(File file) {
         Tab tab = new Tab(file.getName());
         tab.setClosable(true);
-        tab.setContent(new MetadataView(file));
+        final MetadataView metadataView = new MetadataView(file);
+        final Predicate<TreeTable.Node> METADATA_EXPANSION = node -> {
+            CharSequence name = node.getValue(TableColumn.NAME);
+            switch (name.toString()) {
+                case "Metadata":
+                case "Spatial representation info":
+                case "Identification info":
+                case "Extent":
+                case "Geographic element":
+                case "Vertical element":
+                    return true;
+            }
+            return false;
+        };
+        metadataView.setExpandNode(METADATA_EXPANSION.or(MetadataView.EXPAND_SINGLE_CHILD));
+        tab.setContent(metadataView);
         tabPane.getTabs().add(tab);
     }
 
@@ -138,7 +172,6 @@ public class AppController implements Initializable {
         return vBox;
     }
 
-    
 //    private void createCRSTable() {
 //        FXCRSTable table = new FXCRSTable();
 //        Tab tab = new Tab("CRS");

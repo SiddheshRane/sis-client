@@ -7,7 +7,9 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 import javafx.application.Platform;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.scene.control.CheckBox;
@@ -43,7 +45,53 @@ public class MetadataView extends StackPane {
     TreeTable metadata;
     TreeTableView<TreeTable.Node> treeTableView = new TreeTableView<>();
 
+    public static final Predicate<TreeTable.Node> EXPAND_SINGLE_CHILD = node -> {
+        if (node.getChildren().size() == 1 || node.getParent() == null) {
+            return true;
+        }
+        return false;
+    };
+
+    private SimpleObjectProperty<Predicate<TreeTable.Node>> expandNodeProperty;
+
+    /**
+     * A property containing predicate that returns true if the given
+     * {@link TreeTable.Node} must be expanded in the {@link TreeTableView} to
+     * show its children by default.
+     *
+     * @return The property containing the expansion predicate
+     */
+    public ObjectProperty<Predicate<TreeTable.Node>> expandNodeProperty() {
+        return expandNodeProperty;
+    }
+
+    public Predicate<TreeTable.Node> getExpandNode() {
+        return expandNodeProperty.get();
+    }
+
+    public void setExpandNode(Predicate<TreeTable.Node> expandNode) {
+        expandNodeProperty.set(expandNode);
+    }
+
+    /**
+     * Returns true if a TreeTable.Node's children must also be added to the
+     * tree table.
+     */
+    Predicate<TreeTable.Node> createChildNodes = node -> true;
+
+    public Predicate<TreeTable.Node> getCreateChildNodes() {
+        return createChildNodes;
+    }
+
+    public void setCreateChildNodes(Predicate<TreeTable.Node> createChildNodes) {
+        this.createChildNodes = createChildNodes;
+    }
+
     public MetadataView(TreeTable metadata) {
+        expandNodeProperty = new SimpleObjectProperty<>(EXPAND_SINGLE_CHILD);
+        expandNodeProperty.addListener((observable, oldValue, newValue) -> {
+            expandNodes(treeTableView.getRoot());
+        });
         this.metadata = metadata;
         getChildren().add(treeTableView);
         treeTableView.setColumnResizePolicy(TreeTableView.CONSTRAINED_RESIZE_POLICY);
@@ -73,7 +121,9 @@ public class MetadataView extends StackPane {
                 }
             }
         };
-        new Thread(metadataRetriever).start();
+        final Thread thread = new Thread(metadataRetriever);
+        thread.setDaemon(true);
+        thread.start();
     }
 
     private void populateTreeTableView(TreeTable treeTable) {
@@ -119,7 +169,7 @@ public class MetadataView extends StackPane {
                 String type = param.getValue().getValue().getValue(TYPE).toString();
                 Object value = param.getValue().getValue().getUserObject();
                 if (value != null) {
-                    type += '\n'+value.getClass().toString();
+                    type += '\n' + value.getClass().toString();
                 }
                 return new SimpleObjectProperty(type);
             });
@@ -127,12 +177,14 @@ public class MetadataView extends StackPane {
         }
 
         TreeItem<TreeTable.Node> rootItem = createTreeItem(treeTable.getRoot());
+        rootItem.setExpanded(true);
         treeTableView.setRoot(rootItem);
     }
 
     private TreeItem<TreeTable.Node> createTreeItem(TreeTable.Node root) {
         TreeItem<TreeTable.Node> rootItem = new TreeItem<>(root);
-        if (!root.isLeaf()) {
+        rootItem.setExpanded(getExpandNode().test(root));
+        if (!root.isLeaf() && createChildNodes.test(root)) {
             Collection<TreeTable.Node> children = root.getChildren();
             for (TreeTable.Node child : children) {
                 TreeItem<TreeTable.Node> childItem = createTreeItem(child);
@@ -140,6 +192,16 @@ public class MetadataView extends StackPane {
             }
         }
         return rootItem;
+    }
+
+    private void expandNodes(TreeItem<TreeTable.Node> root) {
+        if (root == null || root.isLeaf()) {
+            return;
+        }
+        root.setExpanded(getExpandNode().test(root.getValue()));
+        for (TreeItem<TreeTable.Node> child : root.getChildren()) {
+            expandNodes(child);
+        }
     }
 
     public static String traverseMap(Map<String, Object> map) {
@@ -155,6 +217,7 @@ public class MetadataView extends StackPane {
     private static class MetadataCell extends TreeTableCell<TreeTable.Node, Object> {
 
         public MetadataCell() {
+            setWrapText(true);
         }
 
         @Override
@@ -188,9 +251,13 @@ public class MetadataView extends StackPane {
                 checkBox.setSelected((Boolean) item);
                 setGraphic(checkBox);
             } else if (item instanceof Double) {
-                setGraphic(new Spinner(Double.MIN_VALUE, Double.MAX_VALUE, (double) item));
+                final Spinner spinner = new Spinner(Double.MIN_VALUE, Double.MAX_VALUE, (double) item);
+                spinner.setEditable(true);
+                setGraphic(spinner);
             } else if (item instanceof Integer) {
-                setGraphic(new Spinner(Integer.MIN_VALUE, Integer.MAX_VALUE, (int) item));
+                final Spinner spinner = new Spinner(Integer.MIN_VALUE, Integer.MAX_VALUE, (int) item);
+                spinner.setEditable(true);
+                setGraphic(spinner);
             } else if (item instanceof Date) {
                 Date d = (Date) item;
                 LocalDate date = d.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
