@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import org.controlsfx.control.RangeSlider?>
+<?import org.controlsfx.control.SnapshotView?>
+
+<AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="200.0" minWidth="300.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sis.client.MercatorExtentController">
+    <children>
+        <ScrollPane fx:id="scrollPane" hbarPolicy="NEVER" pannable="true" vbarPolicy="NEVER" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <content>
+                <SnapshotView fx:id="snapshot" layoutX="108.0" layoutY="75.0" prefHeight="459.0" prefWidth="600.0" style="-fx-background-color: #387892;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                    <node>
+                        <ImageView fx:id="image" pickOnBounds="true" preserveRatio="true">
+                            <image>
+                                <Image url="@Mercator-Projection.png" />
+                            </image>
+                        </ImageView>
+                    </node>
+                </SnapshotView>
+            </content>
+        </ScrollPane>
+        <RangeSlider fx:id="longitudeRange" highValue="90.0" layoutX="14.0" layoutY="70.0" lowValue="-90.0" majorTickUnit="30.0" max="180.0" min="-180.0" prefHeight="38.0" prefWidth="437.0" showTickLabels="true" showTickMarks="true" AnchorPane.leftAnchor="30.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="5.0" />
+        <RangeSlider fx:id="latitudeRange" highValue="45.0" layoutX="-18.0" layoutY="49.0" lowValue="-45.0" majorTickUnit="15.0" max="90.0" min="-90.0" orientation="VERTICAL" prefHeight="387.0" prefWidth="43.0" showTickLabels="true" showTickMarks="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="5.0" AnchorPane.topAnchor="35.0" />
+        <Spinner layoutX="45.0" layoutY="62.0" mouseTransparent="true" prefHeight="26.0" prefWidth="126.0" visible="false">
+            <styleClass>
+                <String fx:value="arrows-on-left-horizontal" />
+                <String fx:value="latlongspinner" />
+            </styleClass>
+        </Spinner>
+        <Spinner layoutX="180.0" layoutY="61.0" mouseTransparent="true" prefHeight="26.0" prefWidth="126.0" visible="false">
+            <styleClass>
+                <String fx:value="arrows-on-right-horizontal" />
+                <String fx:value="latlongspinner" />
+            </styleClass>
+        </Spinner>
+        <Spinner layoutX="304.0" layoutY="377.0" mouseTransparent="true" prefHeight="26.0" prefWidth="126.0" visible="false">
+            <styleClass>
+                <String fx:value="arrows-on-left-horizontal" />
+                <String fx:value="latlongspinner" />
+            </styleClass>
+        </Spinner>
+        <Spinner layoutX="445.0" layoutY="375.0" mouseTransparent="true" prefHeight="26.0" prefWidth="126.0" visible="false">
+            <styleClass>
+                <String fx:value="arrows-on-right-horizontal" />
+                <String fx:value="latlongspinner" />
+            </styleClass>
+        </Spinner>
+    </children>
+</AnchorPane>

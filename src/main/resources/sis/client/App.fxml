@@ -32,6 +32,11 @@
                         <fx:include source="crs/crs.fxml" />
                      </content>
                   </Tab>
+                  <Tab closable="false" text="Extent">
+                     <content>
+                        <fx:include source="MercatorExtent.fxml" />
+                     </content>
+                  </Tab>
                </tabs>
             </TabPane>
          </center>
