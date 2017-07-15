@@ -10,6 +10,8 @@ import java.util.ResourceBundle;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.prefs.Preferences;
+import java.util.prefs.PreferencesFactory;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
@@ -96,6 +98,7 @@ public class AppController implements Initializable {
 
     public AppController() {
         map = new Map();
+        loadPreferences();
     }
     private final Map map;
 
@@ -133,6 +136,15 @@ public class AppController implements Initializable {
         tabPane.getTabs().add(tab);
     }
 
+    private void loadPreferences(){
+        Preferences metaPrefs = Preferences.userNodeForPackage(AppController.class);
+        final String IDENTIFIER = "IDENTIFIER";
+        metaPrefs.put("Metadata", IDENTIFIER);
+        metaPrefs.put("Spatial representation info", IDENTIFIER);
+        metaPrefs.put("Extent", IDENTIFIER);
+        System.out.println("path:"+metaPrefs.absolutePath());
+        System.out.println("name:"+metaPrefs.name());
+    }
     /**
      * This function generates a graphical {@code Node} to represent
      * {@code file} in the drag and drop pane.

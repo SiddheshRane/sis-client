@@ -4,19 +4,25 @@ import java.io.File;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Spinner;
+import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeSortMode;
 import javafx.scene.control.TreeTableCell;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableView;
@@ -28,11 +34,13 @@ import org.apache.sis.storage.DataStore;
 import org.apache.sis.storage.DataStoreException;
 import org.apache.sis.storage.DataStores;
 import org.apache.sis.util.collection.TableColumn;
+import static org.apache.sis.util.collection.TableColumn.IDENTIFIER;
 import static org.apache.sis.util.collection.TableColumn.NAME;
 import static org.apache.sis.util.collection.TableColumn.TYPE;
 import static org.apache.sis.util.collection.TableColumn.VALUE;
 import static org.apache.sis.util.collection.TableColumn.VALUE_AS_TEXT;
 import org.apache.sis.util.collection.TreeTable;
+import org.opengis.filter.capability.ComparisonOperators;
 import org.opengis.metadata.Metadata;
 import org.opengis.util.ControlledVocabulary;
 
@@ -46,10 +54,7 @@ public class MetadataView extends StackPane {
     TreeTableView<TreeTable.Node> treeTableView = new TreeTableView<>();
 
     public static final Predicate<TreeTable.Node> EXPAND_SINGLE_CHILD = node -> {
-        if (node.getChildren().size() == 1 || node.getParent() == null) {
-            return true;
-        }
-        return false;
+        return node.getChildren().size() == 1 || node.getParent() == null;
     };
 
     private SimpleObjectProperty<Predicate<TreeTable.Node>> expandNodeProperty;
@@ -78,6 +83,8 @@ public class MetadataView extends StackPane {
      * tree table.
      */
     Predicate<TreeTable.Node> createChildNodes = node -> true;
+
+    Predicate<TreeTable.Node> coalesceSingleChildren = node -> true;
 
     public Predicate<TreeTable.Node> getCreateChildNodes() {
         return createChildNodes;
@@ -115,7 +122,7 @@ public class MetadataView extends StackPane {
                 TreeTable tree;
                 try (DataStore ds = DataStores.open(file)) {
                     Metadata metadata = ds.getMetadata();
-                    tree = MetadataStandard.ISO_19115.asTreeTable(metadata, Metadata.class, ValueExistencePolicy.COMPACT);
+                    tree = MetadataStandard.ISO_19115.asTreeTable(metadata, Metadata.class, ValueExistencePolicy.ALL);
                     Platform.runLater(() -> populateTreeTableView(tree));
                 } catch (DataStoreException ex) {
                 }
@@ -128,6 +135,16 @@ public class MetadataView extends StackPane {
 
     private void populateTreeTableView(TreeTable treeTable) {
         List<TableColumn<?>> columns = treeTable.getColumns();
+        //IDENTIFIER column
+        if (columns.contains(IDENTIFIER)) {
+            TreeTableColumn<TreeTable.Node, Object> idColumn = new TreeTableColumn<>(IDENTIFIER.getHeader().toString());
+            idColumn.setCellValueFactory((param) -> {
+                Object value = param.getValue().getValue().getValue(IDENTIFIER);
+                value = value == null ? "" : value;
+                return new SimpleObjectProperty(value);
+            });
+            treeTableView.getColumns().add(idColumn);
+        }
 
         //NAME column
         TreeTableColumn<TreeTable.Node, Object> nameColumn = new TreeTableColumn<>(NAME.getHeader().toString());
@@ -186,13 +203,47 @@ public class MetadataView extends StackPane {
         rootItem.setExpanded(getExpandNode().test(root));
         if (!root.isLeaf() && createChildNodes.test(root)) {
             Collection<TreeTable.Node> children = root.getChildren();
-            for (TreeTable.Node child : children) {
+            List<TreeTable.Node> transformChildren = transformChildren(rootItem);
+            for (TreeTable.Node child : transformChildren) {
                 TreeItem<TreeTable.Node> childItem = createTreeItem(child);
                 rootItem.getChildren().add(childItem);
             }
         }
         return rootItem;
     }
+
+    /**
+     * Given a root node return a list of its filtered and sorted children. The
+     * original list should not be modified. A new list must be returned. This
+     * list will not be modified and so an immutable or read only list can be
+     * returned
+     *
+     * @param root
+     * @return a list of transformed children
+     */
+    private List<TreeTable.Node> transformChildren(TreeItem<TreeTable.Node> root) {
+        List<TreeTable.Node> transformed = root.getValue().getChildren().stream().filter(notCoveredByCustomWidget).filter(nonEmptyLeaf).collect(Collectors.toList());
+        return transformed;
+    }
+
+    Predicate<TreeTable.Node> nonEmptyLeaf = (t) -> {
+        return !t.isLeaf() || t.getValue(VALUE) != null;
+    };
+    Predicate<TreeTable.Node> notCoveredByCustomWidget = new Predicate<TreeTable.Node>() {
+        @Override
+        public boolean test(TreeTable.Node t) {
+            String id = t.getValue(IDENTIFIER);
+            if (id == null) {
+                return true;
+            }
+            switch (id) {
+                case "resolution":
+                case "numberOfDimensions":
+                    return false;
+            }
+            return true;
+        }
+    };
 
     private void expandNodes(TreeItem<TreeTable.Node> root) {
         if (root == null || root.isLeaf()) {
@@ -202,16 +253,6 @@ public class MetadataView extends StackPane {
         for (TreeItem<TreeTable.Node> child : root.getChildren()) {
             expandNodes(child);
         }
-    }
-
-    public static String traverseMap(Map<String, Object> map) {
-        String str = "";
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-            String key = entry.getKey();
-            Object value = entry.getValue();
-            str += key + "\t\t" + value.getClass().getSimpleName() + "\t" + value.toString() + "\n";
-        }
-        return str;
     }
 
     private static class MetadataCell extends TreeTableCell<TreeTable.Node, Object> {
