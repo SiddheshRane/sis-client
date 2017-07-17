@@ -3,30 +3,32 @@ package sis.client;
 import java.io.File;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.Collection;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Predicate;
-import java.util.stream.Collector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Spinner;
-import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeSortMode;
 import javafx.scene.control.TreeTableCell;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableView;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 import org.apache.sis.metadata.MetadataStandard;
 import org.apache.sis.metadata.ValueExistencePolicy;
@@ -40,16 +42,22 @@ import static org.apache.sis.util.collection.TableColumn.TYPE;
 import static org.apache.sis.util.collection.TableColumn.VALUE;
 import static org.apache.sis.util.collection.TableColumn.VALUE_AS_TEXT;
 import org.apache.sis.util.collection.TreeTable;
-import org.opengis.filter.capability.ComparisonOperators;
 import org.opengis.metadata.Metadata;
+import org.opengis.metadata.extent.GeographicBoundingBox;
+import org.opengis.metadata.extent.GeographicExtent;
+import org.opengis.metadata.extent.VerticalExtent;
 import org.opengis.util.ControlledVocabulary;
 
 /**
  *
  * @author Siddhesh Rane
  */
-public class MetadataView extends StackPane {
+public class MetadataView extends VBox {
 
+    Preferences rootprefs;
+    Preferences filters;
+    Preferences sort;
+    Preferences currentConfig;
     TreeTable metadata;
     TreeTableView<TreeTable.Node> treeTableView = new TreeTableView<>();
 
@@ -78,31 +86,30 @@ public class MetadataView extends StackPane {
         expandNodeProperty.set(expandNode);
     }
 
-    /**
-     * Returns true if a TreeTable.Node's children must also be added to the
-     * tree table.
-     */
-    Predicate<TreeTable.Node> createChildNodes = node -> true;
-
-    Predicate<TreeTable.Node> coalesceSingleChildren = node -> true;
-
-    public Predicate<TreeTable.Node> getCreateChildNodes() {
-        return createChildNodes;
-    }
-
-    public void setCreateChildNodes(Predicate<TreeTable.Node> createChildNodes) {
-        this.createChildNodes = createChildNodes;
-    }
-
     public MetadataView(TreeTable metadata) {
+        this.metadata = metadata;
         expandNodeProperty = new SimpleObjectProperty<>(EXPAND_SINGLE_CHILD);
         expandNodeProperty.addListener((observable, oldValue, newValue) -> {
             expandNodes(treeTableView.getRoot());
         });
-        this.metadata = metadata;
-        getChildren().add(treeTableView);
+        this.rootprefs = Preferences.userNodeForPackage(MetadataView.class);
+        String[] childrenNames = {};
+        try {
+            childrenNames = rootprefs.childrenNames();
+        } catch (BackingStoreException ex) {
+            Logger.getLogger(MetadataView.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        ComboBox<String> prefBox = new ComboBox<>(FXCollections.observableArrayList(childrenNames));
+        prefBox.getSelectionModel().selectFirst();
+        Button configSave = new Button("Save Config");
+        configSave.setTooltip(new Tooltip("Save the current config info to preferences file. On linux it is available at ${user.home}/.java/.userPrefs/" + MetadataView.class.getPackage().getName()));
+        configSave.setOnAction((event)
+                -> saveCurrentConfig());
+        getChildren().addAll(new HBox(configSave, prefBox), treeTableView);
         treeTableView.setColumnResizePolicy(TreeTableView.CONSTRAINED_RESIZE_POLICY);
         treeTableView.setTableMenuButtonVisible(true);
+        setVgrow(treeTableView, Priority.ALWAYS);
         if (metadata != null) {
             populateTreeTableView(metadata);
         }
@@ -123,6 +130,7 @@ public class MetadataView extends StackPane {
                 try (DataStore ds = DataStores.open(file)) {
                     Metadata metadata = ds.getMetadata();
                     tree = MetadataStandard.ISO_19115.asTreeTable(metadata, Metadata.class, ValueExistencePolicy.ALL);
+                    MetadataView.this.metadata = tree;
                     Platform.runLater(() -> populateTreeTableView(tree));
                 } catch (DataStoreException ex) {
                 }
@@ -201,8 +209,7 @@ public class MetadataView extends StackPane {
     private TreeItem<TreeTable.Node> createTreeItem(TreeTable.Node root) {
         TreeItem<TreeTable.Node> rootItem = new TreeItem<>(root);
         rootItem.setExpanded(getExpandNode().test(root));
-        if (!root.isLeaf() && createChildNodes.test(root)) {
-            Collection<TreeTable.Node> children = root.getChildren();
+        if (!root.isLeaf()) {
             List<TreeTable.Node> transformChildren = transformChildren(rootItem);
             for (TreeTable.Node child : transformChildren) {
                 TreeItem<TreeTable.Node> childItem = createTreeItem(child);
@@ -236,6 +243,7 @@ public class MetadataView extends StackPane {
             if (id == null) {
                 return true;
             }
+            //TODO: Replace this hard coded switch case with preferences
             switch (id) {
                 case "resolution":
                 case "numberOfDimensions":
@@ -252,6 +260,28 @@ public class MetadataView extends StackPane {
         root.setExpanded(getExpandNode().test(root.getValue()));
         for (TreeItem<TreeTable.Node> child : root.getChildren()) {
             expandNodes(child);
+        }
+    }
+
+    private void loadConfigs() {
+        this.rootprefs = Preferences.userNodeForPackage(MetadataView.class);
+    }
+
+    private void saveCurrentConfig() {
+        Preferences node = rootprefs.node(metadata.getRoot().getValue(NAME).toString());
+        addToPref(node, metadata.getRoot(), 0);
+    }
+
+    private void addToPref(Preferences pref, TreeTable.Node root, int count) {
+        String id = root.getValue(IDENTIFIER);
+        String name = root.getValue(NAME).toString();
+        String key = id == null ? name : id;
+        pref.putInt(key, count);
+        if (!root.isLeaf()) {
+            for (TreeTable.Node child : root.getChildren()) {
+                count++;
+                addToPref(pref, child, count);
+            }
         }
     }
 
@@ -304,6 +334,23 @@ public class MetadataView extends StackPane {
                 LocalDate date = d.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
                 DatePicker datePicker = new DatePicker(date);
                 setGraphic(datePicker);
+            } else if (item instanceof VerticalExtent) {
+                System.out.println("we are reaching till VerticalExtent");
+                VerticalExtent extent = (VerticalExtent) item;
+                Spinner<Double> min = new Spinner<>(Double.MIN_VALUE, Double.MAX_VALUE, extent.getMinimumValue());
+                Spinner<Double> max = new Spinner<>(Double.MIN_VALUE, Double.MAX_VALUE, extent.getMaximumValue());
+                HBox hBox = new HBox(min, max);
+                hBox.setSpacing(3);
+                setGraphic(hBox);
+            } else if (item instanceof GeographicBoundingBox) {
+                System.out.println("we are reaching till GeoBBox");
+                GeographicBoundingBox extent = (GeographicBoundingBox) item;
+                Spinner north = new Spinner(-90, 90, extent.getNorthBoundLatitude());
+                Spinner south = new Spinner(-90, 90, extent.getSouthBoundLatitude());
+                Spinner east = new Spinner(-180, 180, extent.getEastBoundLongitude());
+                Spinner west = new Spinner(-180, 180, extent.getWestBoundLongitude());
+                BorderPane borderPane = new BorderPane(null, north, east, south, west);
+                setGraphic(borderPane);
             } else {
                 setGraphic(null);
                 setText(item.toString());
