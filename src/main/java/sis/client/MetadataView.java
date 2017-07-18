@@ -15,6 +15,8 @@ import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
@@ -43,6 +45,7 @@ import static org.apache.sis.util.collection.TableColumn.VALUE;
 import static org.apache.sis.util.collection.TableColumn.VALUE_AS_TEXT;
 import org.apache.sis.util.collection.TreeTable;
 import org.opengis.metadata.Metadata;
+import org.opengis.metadata.citation.CitationDate;
 import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.metadata.extent.GeographicExtent;
 import org.opengis.metadata.extent.VerticalExtent;
@@ -176,10 +179,9 @@ public class MetadataView extends VBox {
 
         //VALUE column
         if (columns.contains(VALUE)) {
-            TreeTableColumn<TreeTable.Node, Object> valueColumn = new TreeTableColumn<>(VALUE.getHeader().toString());
+            TreeTableColumn<TreeTable.Node, TreeTable.Node> valueColumn = new TreeTableColumn<>(VALUE.getHeader().toString());
             valueColumn.setCellValueFactory((param) -> {
-                Object value = param.getValue().getValue().getValue(VALUE);
-                value = value == null ? "" : value;
+                TreeTable.Node value = param.getValue().getValue();
                 return new SimpleObjectProperty(value);
             });
             valueColumn.setCellFactory((param) -> {
@@ -285,20 +287,24 @@ public class MetadataView extends VBox {
         }
     }
 
-    private static class MetadataCell extends TreeTableCell<TreeTable.Node, Object> {
+    private static class MetadataCell extends TreeTableCell<TreeTable.Node, TreeTable.Node> {
 
         public MetadataCell() {
             setWrapText(true);
         }
 
         @Override
-        protected void updateItem(Object item, boolean empty) {
-            super.updateItem(item, empty);
+        protected void updateItem(TreeTable.Node node, boolean empty) {
+            super.updateItem(node, empty);
+
             if (empty) {
                 setGraphic(null);
                 setText("");
                 return;
             }
+            Object value = node.getValue(VALUE);
+            Object userObject = node.getUserObject();
+            Object item = value == null ? userObject == null ? "" : userObject : value;
             setText("");
             if (item instanceof ControlledVocabulary) {
                 ControlledVocabulary vocab = (ControlledVocabulary) item;
@@ -334,8 +340,33 @@ public class MetadataView extends VBox {
                 LocalDate date = d.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
                 DatePicker datePicker = new DatePicker(date);
                 setGraphic(datePicker);
+            } else if (item instanceof CitationDate) {
+                CitationDate d = (CitationDate) item;
+                LocalDate date = d.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                DatePicker datePicker = new DatePicker(date);
+
+                //TODO: Refactor all widgets into separate classes
+                //Copy pasted from controlled vocabulary
+                ControlledVocabulary vocab = d.getDateType();
+                final ComboBox<ControlledVocabulary> comboBox
+                        = new ComboBox(FXCollections.<ControlledVocabulary>observableArrayList(vocab.family()));
+                comboBox.setConverter(new StringConverter<ControlledVocabulary>() {
+                    @Override
+                    public String toString(ControlledVocabulary object) {
+                        return object.name();
+                    }
+
+                    @Override
+                    public ControlledVocabulary fromString(String string) {
+                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    }
+                });
+                comboBox.getSelectionModel().select(vocab);
+
+                HBox hBox = new HBox(datePicker, comboBox);
+                hBox.setSpacing(2);
+                setGraphic(hBox);
             } else if (item instanceof VerticalExtent) {
-                System.out.println("we are reaching till VerticalExtent");
                 VerticalExtent extent = (VerticalExtent) item;
                 Spinner<Double> min = new Spinner<>(Double.MIN_VALUE, Double.MAX_VALUE, extent.getMinimumValue());
                 Spinner<Double> max = new Spinner<>(Double.MIN_VALUE, Double.MAX_VALUE, extent.getMaximumValue());
@@ -343,17 +374,31 @@ public class MetadataView extends VBox {
                 hBox.setSpacing(3);
                 setGraphic(hBox);
             } else if (item instanceof GeographicBoundingBox) {
-                System.out.println("we are reaching till GeoBBox");
                 GeographicBoundingBox extent = (GeographicBoundingBox) item;
                 Spinner north = new Spinner(-90, 90, extent.getNorthBoundLatitude());
                 Spinner south = new Spinner(-90, 90, extent.getSouthBoundLatitude());
                 Spinner east = new Spinner(-180, 180, extent.getEastBoundLongitude());
                 Spinner west = new Spinner(-180, 180, extent.getWestBoundLongitude());
-                BorderPane borderPane = new BorderPane(null, north, east, south, west);
+                north.setMaxWidth(120);
+                south.setMaxWidth(120);
+                east.setMaxWidth(120);
+                west.setMaxWidth(120);
+                north.setMinWidth(20);
+                south.setMinWidth(20);
+                east.setMinWidth(20);
+                west.setMinWidth(20);
+                Button fullscreen = new Button("▣");
+                BorderPane borderPane = new BorderPane(fullscreen, north, east, south, west);
+                BorderPane.setAlignment(north, Pos.CENTER);
+                BorderPane.setAlignment(south, Pos.CENTER);
                 setGraphic(borderPane);
             } else {
                 setGraphic(null);
-                setText(item.toString());
+                if (value == null) {
+                    setText("");
+                } else {
+                    setText(item.toString());
+                }
             }
         }
 
