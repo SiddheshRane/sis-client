@@ -1,6 +1,9 @@
 package sis.client;
 
+import java.awt.Desktop;
 import java.io.File;
+import java.io.IOException;
+import java.net.URI;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
@@ -15,13 +18,14 @@ import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Spinner;
+import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableCell;
@@ -44,12 +48,14 @@ import static org.apache.sis.util.collection.TableColumn.TYPE;
 import static org.apache.sis.util.collection.TableColumn.VALUE;
 import static org.apache.sis.util.collection.TableColumn.VALUE_AS_TEXT;
 import org.apache.sis.util.collection.TreeTable;
+import org.opengis.metadata.Identifier;
 import org.opengis.metadata.Metadata;
 import org.opengis.metadata.citation.CitationDate;
+import org.opengis.metadata.citation.OnlineResource;
 import org.opengis.metadata.extent.GeographicBoundingBox;
-import org.opengis.metadata.extent.GeographicExtent;
 import org.opengis.metadata.extent.VerticalExtent;
 import org.opengis.util.ControlledVocabulary;
+import org.opengis.util.InternationalString;
 
 /**
  *
@@ -387,11 +393,58 @@ public class MetadataView extends VBox {
                 south.setMinWidth(20);
                 east.setMinWidth(20);
                 west.setMinWidth(20);
-                Button fullscreen = new Button("▣");
+                Button fullscreen = new Button("•");
                 BorderPane borderPane = new BorderPane(fullscreen, north, east, south, west);
                 BorderPane.setAlignment(north, Pos.CENTER);
                 BorderPane.setAlignment(south, Pos.CENTER);
                 setGraphic(borderPane);
+            } else if (item instanceof Identifier) {
+                Identifier id = (Identifier) item;
+                final String codeSpace = id.getCodeSpace();
+                TextField codespace = new TextField(codeSpace+"");
+                codespace.setPromptText("code space");
+                final String codeString = id.getCode();
+                TextField code = new TextField(codeString + "");
+                code.setPromptText("code");
+                final String versionString = id.getVersion();
+                TextField version = new TextField(versionString + "");
+                version.setPromptText("version");
+                final InternationalString descriptionString = id.getDescription();
+                TextField description = new TextField(descriptionString + "");
+                description.setPromptText("description");
+                HBox hBox = new HBox(codespace, code, version);
+                hBox.setSpacing(2);
+                VBox vBox = new VBox(hBox, description);
+                vBox.setFillWidth(true);
+                vBox.setSpacing(2);
+                VBox.setVgrow(description, Priority.ALWAYS);
+                setGraphic(vBox);
+            } else if (item instanceof OnlineResource) {
+                OnlineResource resource = (OnlineResource) item;
+                InternationalString name = resource.getName();
+                URI link = resource.getLinkage();
+                String linktext = name == null ? link.toString() : name.toString();
+                InternationalString description = resource.getDescription();
+                Hyperlink hyperlink = new Hyperlink(linktext);
+                if (description != null) {
+                    hyperlink.setTooltip(new Tooltip(description.toString()));
+                }
+                hyperlink.setUserData(link);
+                hyperlink.setOnAction(ae -> {
+                    if (Desktop.isDesktopSupported()) {
+                        Desktop desktop = Desktop.getDesktop();
+                        Thread thread = new Thread(() -> {
+                            try {
+                                desktop.browse(link);
+                            } catch (IOException ex) {
+                                Logger.getLogger(MetadataView.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        });
+                        thread.setDaemon(true);
+                        thread.start();
+                    }
+                });
+                setGraphic(hyperlink);
             } else {
                 setGraphic(null);
                 if (value == null) {
