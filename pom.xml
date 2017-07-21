@@ -131,9 +131,8 @@
         </dependency>
         <dependency>
             <groupId>org.fxmisc.easybind</groupId>
-            <artifactId>EasyBind</artifactId>
-            <version>1.0.4-SNAPSHOT</version>
-            <type>jar</type>
+            <artifactId>easybind</artifactId>
+            <version>1.0.3</version>
         </dependency>
     </dependencies>
     <description>A JavaFX desktop app for editing Metadata, CRS and coordinate transformations</description>

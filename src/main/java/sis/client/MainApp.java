@@ -15,7 +15,7 @@ public class MainApp extends Application {
     public void start(Stage stage) throws Exception {
         final URL resource = MainApp.class.getResource("App.fxml");
         System.out.println("resource = " + resource);
-        Parent root = FXMLLoader.load(resource);
+        Parent root = FXMLLoader.load(resource); 
         
         Scene scene = new Scene(root);
         

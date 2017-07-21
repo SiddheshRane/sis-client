@@ -18,12 +18,14 @@ import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
@@ -35,7 +37,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.util.StringConverter;
+import javafx.scene.text.TextFlow;
 import org.apache.sis.metadata.MetadataStandard;
 import org.apache.sis.metadata.ValueExistencePolicy;
 import org.apache.sis.storage.DataStore;
@@ -54,8 +56,11 @@ import org.opengis.metadata.citation.CitationDate;
 import org.opengis.metadata.citation.OnlineResource;
 import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.metadata.extent.VerticalExtent;
+import org.opengis.metadata.identification.Keywords;
+import org.opengis.metadata.spatial.Dimension;
 import org.opengis.util.ControlledVocabulary;
 import org.opengis.util.InternationalString;
+import sis.client.metadata.ControlledVocabularyBox;
 
 /**
  *
@@ -138,7 +143,7 @@ public class MetadataView extends VBox {
                 TreeTable tree;
                 try (DataStore ds = DataStores.open(file)) {
                     Metadata metadata = ds.getMetadata();
-                    tree = MetadataStandard.ISO_19115.asTreeTable(metadata, Metadata.class, ValueExistencePolicy.ALL);
+                    tree = MetadataStandard.ISO_19115.asTreeTable(metadata, Metadata.class, ValueExistencePolicy.NON_EMPTY);
                     MetadataView.this.metadata = tree;
                     Platform.runLater(() -> populateTreeTableView(tree));
                 } catch (DataStoreException ex) {
@@ -255,6 +260,20 @@ public class MetadataView extends VBox {
             switch (id) {
                 case "resolution":
                 case "numberOfDimensions":
+                case "dimensionName":
+                case "dimensionSize":
+                case "date":
+                case "dateType":
+                case "westBoundLongitude":
+                case "eastBoundLongitude":
+                case "northBoundLatitude":
+                case "southBoundLatitude":
+                case "minimumValue":
+                case "maximumValue":
+                case "code":
+                case "codeSpace":
+                case "version":
+
                     return false;
             }
             return true;
@@ -314,20 +333,7 @@ public class MetadataView extends VBox {
             setText("");
             if (item instanceof ControlledVocabulary) {
                 ControlledVocabulary vocab = (ControlledVocabulary) item;
-                final ComboBox<ControlledVocabulary> comboBox
-                        = new ComboBox(FXCollections.<ControlledVocabulary>observableArrayList(vocab.family()));
-                comboBox.setConverter(new StringConverter<ControlledVocabulary>() {
-                    @Override
-                    public String toString(ControlledVocabulary object) {
-                        return object.name();
-                    }
-
-                    @Override
-                    public ControlledVocabulary fromString(String string) {
-                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                    }
-                });
-                comboBox.getSelectionModel().select(vocab);
+                ControlledVocabularyBox comboBox = new ControlledVocabularyBox(vocab);
                 setGraphic(comboBox);
             } else if (item instanceof Boolean) {
                 final CheckBox checkBox = new CheckBox();
@@ -352,23 +358,9 @@ public class MetadataView extends VBox {
                 DatePicker datePicker = new DatePicker(date);
 
                 //TODO: Refactor all widgets into separate classes
-                //Copy pasted from controlled vocabulary
+                //TODO: Transfer styling info like spacing to css files
                 ControlledVocabulary vocab = d.getDateType();
-                final ComboBox<ControlledVocabulary> comboBox
-                        = new ComboBox(FXCollections.<ControlledVocabulary>observableArrayList(vocab.family()));
-                comboBox.setConverter(new StringConverter<ControlledVocabulary>() {
-                    @Override
-                    public String toString(ControlledVocabulary object) {
-                        return object.name();
-                    }
-
-                    @Override
-                    public ControlledVocabulary fromString(String string) {
-                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                    }
-                });
-                comboBox.getSelectionModel().select(vocab);
-
+                ControlledVocabularyBox comboBox = new ControlledVocabularyBox(vocab);
                 HBox hBox = new HBox(datePicker, comboBox);
                 hBox.setSpacing(2);
                 setGraphic(hBox);
@@ -401,7 +393,7 @@ public class MetadataView extends VBox {
             } else if (item instanceof Identifier) {
                 Identifier id = (Identifier) item;
                 final String codeSpace = id.getCodeSpace();
-                TextField codespace = new TextField(codeSpace+"");
+                TextField codespace = new TextField(codeSpace + "");
                 codespace.setPromptText("code space");
                 final String codeString = id.getCode();
                 TextField code = new TextField(codeString + "");
@@ -445,6 +437,24 @@ public class MetadataView extends VBox {
                     }
                 });
                 setGraphic(hyperlink);
+            } else if (item instanceof Dimension) {
+                Dimension d = (Dimension) item;
+                ControlledVocabularyBox name = new ControlledVocabularyBox(d.getDimensionName());
+                Spinner size = new Spinner(0, Integer.MAX_VALUE, d.getDimensionSize());
+                HBox hBox = new HBox(size, name);
+                hBox.setSpacing(2);
+                setGraphic(hBox);
+            } else if (item instanceof Keywords) {
+                Keywords keywords = (Keywords) item;
+                TextFlow flow = new TextFlow();
+                for (InternationalString keyword : keywords.getKeywords()) {
+                    Label text = new Label(keyword.toString());
+                    text.setPadding(new Insets(4));
+                    flow.getChildren().add(text);
+                }
+                ControlledVocabularyBox type = new ControlledVocabularyBox(keywords.getType());
+                HBox hBox = new HBox(flow, type);
+                setGraphic(hBox);
             } else {
                 setGraphic(null);
                 if (value == null) {
