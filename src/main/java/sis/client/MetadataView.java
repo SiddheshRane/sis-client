@@ -1,13 +1,20 @@
 package sis.client;
 
+import de.jensd.fx.fontawesome.AwesomeDude;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -17,17 +24,19 @@ import java.util.stream.Collectors;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.collections.FXCollections;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableCell;
@@ -69,36 +78,12 @@ import sis.client.metadata.ControlledVocabularyBox;
 public class MetadataView extends VBox {
 
     Preferences rootprefs;
-    Preferences filters;
-    Preferences sort;
     Preferences currentConfig;
     TreeTable metadata;
     TreeTableView<TreeTable.Node> treeTableView = new TreeTableView<>();
-
-    public static final Predicate<TreeTable.Node> EXPAND_SINGLE_CHILD = node -> {
-        return node.getChildren().size() == 1 || node.getParent() == null;
-    };
-
-    private SimpleObjectProperty<Predicate<TreeTable.Node>> expandNodeProperty;
-
-    /**
-     * A property containing predicate that returns true if the given
-     * {@link TreeTable.Node} must be expanded in the {@link TreeTableView} to
-     * show its children by default.
-     *
-     * @return The property containing the expansion predicate
-     */
-    public ObjectProperty<Predicate<TreeTable.Node>> expandNodeProperty() {
-        return expandNodeProperty;
-    }
-
-    public Predicate<TreeTable.Node> getExpandNode() {
-        return expandNodeProperty.get();
-    }
-
-    public void setExpandNode(Predicate<TreeTable.Node> expandNode) {
-        expandNodeProperty.set(expandNode);
-    }
+    private Button configSave;
+    private ComboBox<String> prefBox;
+    private ToggleButton showEmptyFields;
 
     public MetadataView(TreeTable metadata) {
         this.metadata = metadata;
@@ -106,21 +91,16 @@ public class MetadataView extends VBox {
         expandNodeProperty.addListener((observable, oldValue, newValue) -> {
             expandNodes(treeTableView.getRoot());
         });
-        this.rootprefs = Preferences.userNodeForPackage(MetadataView.class);
-        String[] childrenNames = {};
-        try {
-            childrenNames = rootprefs.childrenNames();
-        } catch (BackingStoreException ex) {
-            Logger.getLogger(MetadataView.class.getName()).log(Level.SEVERE, null, ex);
-        }
 
-        ComboBox<String> prefBox = new ComboBox<>(FXCollections.observableArrayList(childrenNames));
-        prefBox.getSelectionModel().selectFirst();
-        Button configSave = new Button("Save Config");
+        prefBox = new ComboBox<>();
+        configSave = new Button("Save Config");
+        loadConfigs();
         configSave.setTooltip(new Tooltip("Save the current config info to preferences file. On linux it is available at ${user.home}/.java/.userPrefs/" + MetadataView.class.getPackage().getName()));
-        configSave.setOnAction((event)
-                -> saveCurrentConfig());
-        getChildren().addAll(new HBox(configSave, prefBox), treeTableView);
+        configSave.setOnAction((event) -> saveCurrentConfig());
+        final HBox hBox = new HBox(configSave, prefBox);
+        hBox.setSpacing(5);
+        hBox.setPadding(new Insets(5));
+        getChildren().addAll(hBox, treeTableView);
         treeTableView.setColumnResizePolicy(TreeTableView.CONSTRAINED_RESIZE_POLICY);
         treeTableView.setTableMenuButtonVisible(true);
         setVgrow(treeTableView, Priority.ALWAYS);
@@ -143,7 +123,7 @@ public class MetadataView extends VBox {
                 TreeTable tree;
                 try (DataStore ds = DataStores.open(file)) {
                     Metadata metadata = ds.getMetadata();
-                    tree = MetadataStandard.ISO_19115.asTreeTable(metadata, Metadata.class, ValueExistencePolicy.NON_EMPTY);
+                    tree = MetadataStandard.ISO_19115.asTreeTable(metadata, Metadata.class, ValueExistencePolicy.ALL);
                     MetadataView.this.metadata = tree;
                     Platform.runLater(() -> populateTreeTableView(tree));
                 } catch (DataStoreException ex) {
@@ -169,11 +149,14 @@ public class MetadataView extends VBox {
         }
 
         //NAME column
-        TreeTableColumn<TreeTable.Node, Object> nameColumn = new TreeTableColumn<>(NAME.getHeader().toString());
+        TreeTableColumn<TreeTable.Node, String> nameColumn = new TreeTableColumn<>(NAME.getHeader().toString());
         nameColumn.setCellValueFactory((param) -> {
-            Object value = param.getValue().getValue().getValue(NAME);
+            String value = param.getValue().getValue().getValue(NAME).toString();
             value = value == null ? "" : value;
-            return new SimpleObjectProperty(value);
+            return new SimpleStringProperty(value);
+        });
+        nameColumn.setCellFactory((param) -> {
+            return new NameCell();
         });
         treeTableView.getColumns().add(nameColumn);
 
@@ -242,14 +225,22 @@ public class MetadataView extends VBox {
      * @return a list of transformed children
      */
     private List<TreeTable.Node> transformChildren(TreeItem<TreeTable.Node> root) {
-        List<TreeTable.Node> transformed = root.getValue().getChildren().stream().filter(notCoveredByCustomWidget).filter(nonEmptyLeaf).collect(Collectors.toList());
+        List<TreeTable.Node> transformed = root.getValue().getChildren().stream()
+                .filter(notCoveredByCustomWidget)
+                .filter(nonEmptyLeaf)
+                .collect(Collectors.toList());
         return transformed;
     }
 
-    Predicate<TreeTable.Node> nonEmptyLeaf = (t) -> {
+    public static final Predicate<TreeTable.Node> nonEmptyLeaf = (t) -> {
         return !t.isLeaf() || t.getValue(VALUE) != null;
     };
-    Predicate<TreeTable.Node> notCoveredByCustomWidget = new Predicate<TreeTable.Node>() {
+    /**
+     * Returns true if a {@linkplain TreeTable.NODE} is already covered by a
+     * custom widget, hence a separate {@link TreeItem} need not be created for
+     * it. You can chain this predicate to add your extra rules.
+     */
+    public final Predicate<TreeTable.Node> notCoveredByCustomWidget = new Predicate<TreeTable.Node>() {
         @Override
         public boolean test(TreeTable.Node t) {
             String id = t.getValue(IDENTIFIER);
@@ -280,6 +271,64 @@ public class MetadataView extends VBox {
         }
     };
 
+    public static final Predicate<TreeTable.Node> EXPAND_SINGLE_CHILD = node -> {
+        return node.getChildren().size() == 1 || node.getParent() == null;
+    };
+
+    private final Set<String> userFilterSet = new HashSet<>();
+    private Predicate<TreeTable.Node> showInTable = (t) -> {
+        return userFilterSet.contains(getIdentifierElseName(t));
+    };
+    private ObjectProperty<Predicate<TreeTable.Node>> showNodeProperty = new SimpleObjectProperty<>((t) -> true);
+
+    /**
+     * A property containing predicate that returns true if the given
+     * {@link TreeTable.Node} must be shown as a {@link TreeItem} in the
+     * {@link TreeTableView}. By default return true for all nodes unless
+     * preferences are loaded
+     *
+     * @return The property containing the expansion predicate
+     */
+    public ObjectProperty<Predicate<TreeTable.Node>> showNodeProperty() {
+        return showNodeProperty;
+    }
+
+    public Predicate<TreeTable.Node> getShowNode() {
+        return showNodeProperty.get();
+    }
+
+    public void setShowNode(Predicate<TreeTable.Node> showNode) {
+        showNodeProperty.set(showNode);
+    }
+
+    private Map<String, Integer> userSortTable = new HashMap<>();
+    Comparator<TreeTable.Node> userSortOrder = Comparator.comparingInt((node) -> {
+        String key = getIdentifierElseName(node);
+        return userSortTable.getOrDefault(key, Integer.MAX_VALUE);
+    });
+
+    private final Set<String> expandSet = new HashSet<>();
+    private SimpleObjectProperty<Predicate<TreeTable.Node>> expandNodeProperty;
+
+    /**
+     * A property containing predicate that returns true if the given
+     * {@link TreeTable.Node} must be expanded in the {@link TreeTableView} to
+     * show its children by default.
+     *
+     * @return The property containing the expansion predicate
+     */
+    public ObjectProperty<Predicate<TreeTable.Node>> expandNodeProperty() {
+        return expandNodeProperty;
+    }
+
+    public Predicate<TreeTable.Node> getExpandNode() {
+        return expandNodeProperty.get();
+    }
+
+    public void setExpandNode(Predicate<TreeTable.Node> expandNode) {
+        expandNodeProperty.set(expandNode);
+    }
+
     private void expandNodes(TreeItem<TreeTable.Node> root) {
         if (root == null || root.isLeaf()) {
             return;
@@ -291,25 +340,81 @@ public class MetadataView extends VBox {
     }
 
     private void loadConfigs() {
-        this.rootprefs = Preferences.userNodeForPackage(MetadataView.class);
+        rootprefs = Preferences.userNodeForPackage(MetadataView.class);
+        try {
+            String[] childrenNames = rootprefs.childrenNames();
+            prefBox.getItems().setAll(childrenNames);
+            prefBox.valueProperty().addListener((observable, oldValue, newValue) -> {
+                loadConfig(newValue);
+            });
+            prefBox.getSelectionModel().selectFirst();
+        } catch (BackingStoreException ex) {
+            Logger.getLogger(MetadataView.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    void loadConfig(String name) {
+        if (name == null) {
+            return;
+        }
+        currentConfig = rootprefs.node(name);
+        try {
+            final String[] keys = currentConfig.keys();
+            if (keys.length == 0) {
+
+            }
+            expandSet.clear();
+            userSortTable.clear();
+            userFilterSet.clear();
+            for (String key : keys) {
+                String value = currentConfig.get(key, "+ v 0");
+                String[] split = value.split(" ");
+                if ("+".equals(split[0])) {
+                    expandSet.add(key);
+                }
+                if ("v".equals(split[1])) {
+                    userFilterSet.add(key);
+                }
+                int sortPosn = Integer.parseInt(split[2]);
+                userSortTable.put(key, sortPosn);
+            }
+        } catch (BackingStoreException ex) {
+            Logger.getLogger(MetadataView.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    void saveConfig(String name) {
+        name = name == null ? metadata.getRoot().getValue(NAME).toString() : name;
+        Preferences pref = rootprefs.node(name);
     }
 
     private void saveCurrentConfig() {
         Preferences node = rootprefs.node(metadata.getRoot().getValue(NAME).toString());
-        addToPref(node, metadata.getRoot(), 0);
+        try {
+            node.clear();
+        } catch (BackingStoreException ex) {
+            Logger.getLogger(MetadataView.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        addToPref(node, treeTableView.getRoot(), 0);
     }
 
-    private void addToPref(Preferences pref, TreeTable.Node root, int count) {
-        String id = root.getValue(IDENTIFIER);
-        String name = root.getValue(NAME).toString();
-        String key = id == null ? name : id;
-        pref.putInt(key, count);
-        if (!root.isLeaf()) {
-            for (TreeTable.Node child : root.getChildren()) {
+    private void addToPref(Preferences pref, TreeItem<TreeTable.Node> rootItem, int count) {
+        TreeTable.Node root = rootItem.getValue();
+        char expanded = rootItem.isExpanded() ? '+' : '-';
+        String key = getIdentifierElseName(root);
+        pref.put(key, expanded + " v " + count);
+        if (!rootItem.isLeaf()) {
+            for (TreeItem<TreeTable.Node> child : rootItem.getChildren()) {
                 count++;
                 addToPref(pref, child, count);
             }
         }
+    }
+
+    public static final String getIdentifierElseName(TreeTable.Node node) {
+        String name = node.getValue(NAME).toString();
+        String id = node.getValue(IDENTIFIER);
+        return id == null ? name : id;
     }
 
     private static class MetadataCell extends TreeTableCell<TreeTable.Node, TreeTable.Node> {
@@ -465,5 +570,32 @@ public class MetadataView extends VBox {
             }
         }
 
+    }
+
+    private static class NameCell extends TreeTableCell<TreeTable.Node, String> {
+
+        private final Label drag;
+        private final Label visible;
+
+        public NameCell() {
+            visible = AwesomeDude.createIconLabel(AwesomeIcon.EYE);
+            drag = AwesomeDude.createIconLabel(AwesomeIcon.ARROWS);
+            hBox = new HBox(visible, drag);
+            hBox.setAlignment(Pos.CENTER_RIGHT);
+            setGraphic(hBox);
+            setContentDisplay(ContentDisplay.RIGHT);
+        }
+        private HBox hBox;
+
+        @Override
+        protected void updateItem(String item, boolean empty) {
+            super.updateItem(item, empty);
+            if (empty) {
+                setGraphic(null);
+            } else {
+                setGraphic(hBox);
+            }
+            setText(item);
+        }
     }
 }

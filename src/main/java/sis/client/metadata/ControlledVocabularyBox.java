@@ -24,6 +24,9 @@ public class ControlledVocabularyBox extends ComboBox<ControlledVocabulary> {
 
     public ControlledVocabularyBox(ControlledVocabulary cv) {
         setConverter(VOCABULARY_TO_STRING);
+        if (cv ==null) {
+            return ;
+        }
         getItems().setAll(cv.family());
         getSelectionModel().select(cv);
     }
