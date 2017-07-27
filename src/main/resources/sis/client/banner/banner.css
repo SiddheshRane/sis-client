@@ -11,7 +11,7 @@
 }
 .heading {
     -fx-font-family: Noto Sans;
-    -fx-font-size: 44px;
+    -fx-font-size: 34px;
     -fx-fill: -banner-fg;
 }
 .banner .username {

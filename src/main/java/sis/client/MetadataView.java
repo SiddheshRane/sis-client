@@ -35,14 +35,13 @@ import javafx.scene.control.DatePicker;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
-import javafx.scene.control.TextField;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableCell;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableView;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -70,6 +69,9 @@ import org.opengis.metadata.spatial.Dimension;
 import org.opengis.util.ControlledVocabulary;
 import org.opengis.util.InternationalString;
 import sis.client.metadata.ControlledVocabularyBox;
+import sis.client.metadata.GeographicExtentBox;
+import sis.client.metadata.IdentifierBox;
+import sis.client.metadata.VerticalExtentBox;
 
 /**
  *
@@ -86,6 +88,7 @@ public class MetadataView extends VBox {
     private ToggleButton showEmptyFields;
 
     public MetadataView(TreeTable metadata) {
+        rootprefs = Preferences.userNodeForPackage(MetadataView.class);
         this.metadata = metadata;
         expandNodeProperty = new SimpleObjectProperty<>(EXPAND_SINGLE_CHILD);
         expandNodeProperty.addListener((observable, oldValue, newValue) -> {
@@ -93,10 +96,9 @@ public class MetadataView extends VBox {
         });
 
         prefBox = new ComboBox<>();
+        prefBox.setEditable(true);
         configSave = new Button("Save Config");
-        loadConfigs();
         configSave.setTooltip(new Tooltip("Save the current config info to preferences file. On linux it is available at ${user.home}/.java/.userPrefs/" + MetadataView.class.getPackage().getName()));
-        configSave.setOnAction((event) -> saveCurrentConfig());
         final HBox hBox = new HBox(configSave, prefBox);
         hBox.setSpacing(5);
         hBox.setPadding(new Insets(5));
@@ -123,7 +125,7 @@ public class MetadataView extends VBox {
                 TreeTable tree;
                 try (DataStore ds = DataStores.open(file)) {
                     Metadata metadata = ds.getMetadata();
-                    tree = MetadataStandard.ISO_19115.asTreeTable(metadata, Metadata.class, ValueExistencePolicy.ALL);
+                    tree = MetadataStandard.ISO_19115.asTreeTable(metadata, Metadata.class, ValueExistencePolicy.NON_EMPTY);
                     MetadataView.this.metadata = tree;
                     Platform.runLater(() -> populateTreeTableView(tree));
                 } catch (DataStoreException ex) {
@@ -139,7 +141,7 @@ public class MetadataView extends VBox {
         List<TableColumn<?>> columns = treeTable.getColumns();
         //IDENTIFIER column
         if (columns.contains(IDENTIFIER)) {
-            TreeTableColumn<TreeTable.Node, Object> idColumn = new TreeTableColumn<>(IDENTIFIER.getHeader().toString());
+            idColumn = new TreeTableColumn<>(IDENTIFIER.getHeader().toString());
             idColumn.setCellValueFactory((param) -> {
                 Object value = param.getValue().getValue().getValue(IDENTIFIER);
                 value = value == null ? "" : value;
@@ -149,7 +151,7 @@ public class MetadataView extends VBox {
         }
 
         //NAME column
-        TreeTableColumn<TreeTable.Node, String> nameColumn = new TreeTableColumn<>(NAME.getHeader().toString());
+        nameColumn = new TreeTableColumn<>(NAME.getHeader().toString());
         nameColumn.setCellValueFactory((param) -> {
             String value = param.getValue().getValue().getValue(NAME).toString();
             value = value == null ? "" : value;
@@ -185,7 +187,7 @@ public class MetadataView extends VBox {
         }
 
         if (columns.contains(TYPE)) {
-            TreeTableColumn<TreeTable.Node, Object> typeColumn = new TreeTableColumn<>(TYPE.getHeader().toString());
+            typeColumn = new TreeTableColumn<>(TYPE.getHeader().toString());
             typeColumn.setCellValueFactory((param) -> {
                 String type = param.getValue().getValue().getValue(TYPE).toString();
                 Object value = param.getValue().getValue().getUserObject();
@@ -196,11 +198,17 @@ public class MetadataView extends VBox {
             });
             treeTableView.getColumns().add(typeColumn);
         }
+        loadConfigs();
+    }
 
+    private void updateRoot(TreeTable treeTable) {
         TreeItem<TreeTable.Node> rootItem = createTreeItem(treeTable.getRoot());
         rootItem.setExpanded(true);
         treeTableView.setRoot(rootItem);
     }
+    private TreeTableColumn<TreeTable.Node, Object> typeColumn;
+    private TreeTableColumn<TreeTable.Node, String> nameColumn;
+    private TreeTableColumn<TreeTable.Node, Object> idColumn;
 
     private TreeItem<TreeTable.Node> createTreeItem(TreeTable.Node root) {
         TreeItem<TreeTable.Node> rootItem = new TreeItem<>(root);
@@ -209,7 +217,9 @@ public class MetadataView extends VBox {
             List<TreeTable.Node> transformChildren = transformChildren(rootItem);
             for (TreeTable.Node child : transformChildren) {
                 TreeItem<TreeTable.Node> childItem = createTreeItem(child);
-                rootItem.getChildren().add(childItem);
+                if (childItem != null) {
+                    rootItem.getChildren().add(childItem);
+                }
             }
         }
         return rootItem;
@@ -228,6 +238,7 @@ public class MetadataView extends VBox {
         List<TreeTable.Node> transformed = root.getValue().getChildren().stream()
                 .filter(notCoveredByCustomWidget)
                 .filter(nonEmptyLeaf)
+                .filter(showNodeProperty().get())
                 .collect(Collectors.toList());
         return transformed;
     }
@@ -275,9 +286,9 @@ public class MetadataView extends VBox {
         return node.getChildren().size() == 1 || node.getParent() == null;
     };
 
-    private final Set<String> userFilterSet = new HashSet<>();
-    private Predicate<TreeTable.Node> showInTable = (t) -> {
-        return userFilterSet.contains(getIdentifierElseName(t));
+    private final Set<String> shownNodes = new HashSet<>();
+    private Predicate<TreeTable.Node> showNode = (t) -> {
+        return shownNodes.contains(getIdentifierElseName(t));
     };
     private ObjectProperty<Predicate<TreeTable.Node>> showNodeProperty = new SimpleObjectProperty<>((t) -> true);
 
@@ -306,6 +317,19 @@ public class MetadataView extends VBox {
         String key = getIdentifierElseName(node);
         return userSortTable.getOrDefault(key, Integer.MAX_VALUE);
     });
+    private ObjectProperty<Comparator<TreeTable.Node>> comparator = new SimpleObjectProperty<>(userSortOrder);
+
+    public ObjectProperty<Comparator<TreeTable.Node>> comparatorProperty() {
+        return comparator;
+    }
+
+    public Comparator<TreeTable.Node> getComparator() {
+        return comparatorProperty().get();
+    }
+
+    public void setComparator(Comparator<TreeTable.Node> com) {
+        comparatorProperty().set(com);
+    }
 
     private final Set<String> expandSet = new HashSet<>();
     private SimpleObjectProperty<Predicate<TreeTable.Node>> expandNodeProperty;
@@ -340,20 +364,36 @@ public class MetadataView extends VBox {
     }
 
     private void loadConfigs() {
-        rootprefs = Preferences.userNodeForPackage(MetadataView.class);
+        String[] childrenNames = new String[]{};
         try {
-            String[] childrenNames = rootprefs.childrenNames();
-            prefBox.getItems().setAll(childrenNames);
-            prefBox.valueProperty().addListener((observable, oldValue, newValue) -> {
-                loadConfig(newValue);
-            });
-            prefBox.getSelectionModel().selectFirst();
+            childrenNames = rootprefs.childrenNames();
         } catch (BackingStoreException ex) {
             Logger.getLogger(MetadataView.class.getName()).log(Level.SEVERE, null, ex);
         }
+        if (childrenNames.length == 0) {
+            updateRoot(metadata);
+            String rootName = metadata.getRoot().getValue(NAME).toString();
+            saveConfig(rootName);
+            childrenNames = new String[]{rootName};
+        }
+        prefBox.getItems().setAll(childrenNames);
+        prefBox.valueProperty().addListener((observable, oldValue, newValue) -> {
+            if (prefBox.getItems().contains(newValue)) {
+                loadConfig(newValue);
+            } else {
+                saveConfig(newValue);
+            }
+        });
+        String rootName = metadata.getRoot().getValue(NAME).toString();
+        if (metadata != null && prefBox.getItems().contains(rootName)) {
+            prefBox.getSelectionModel().select(rootName);
+        } else {
+            prefBox.getSelectionModel().selectFirst();
+        }
+        configSave.setOnAction((event) -> saveConfig(prefBox.getValue()));
     }
 
-    void loadConfig(String name) {
+    private void loadConfig(String name) {
         if (name == null) {
             return;
         }
@@ -365,7 +405,7 @@ public class MetadataView extends VBox {
             }
             expandSet.clear();
             userSortTable.clear();
-            userFilterSet.clear();
+            shownNodes.clear();
             for (String key : keys) {
                 String value = currentConfig.get(key, "+ v 0");
                 String[] split = value.split(" ");
@@ -373,29 +413,29 @@ public class MetadataView extends VBox {
                     expandSet.add(key);
                 }
                 if ("v".equals(split[1])) {
-                    userFilterSet.add(key);
+                    shownNodes.add(key);
                 }
                 int sortPosn = Integer.parseInt(split[2]);
                 userSortTable.put(key, sortPosn);
             }
+            updateRoot(metadata);
         } catch (BackingStoreException ex) {
             Logger.getLogger(MetadataView.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    void saveConfig(String name) {
-        name = name == null ? metadata.getRoot().getValue(NAME).toString() : name;
+    private void saveConfig(String name) {
+        if (name == null || name.isEmpty()) {
+            return;
+        }
         Preferences pref = rootprefs.node(name);
-    }
-
-    private void saveCurrentConfig() {
-        Preferences node = rootprefs.node(metadata.getRoot().getValue(NAME).toString());
+        currentConfig = pref;
         try {
-            node.clear();
+            pref.clear();
         } catch (BackingStoreException ex) {
             Logger.getLogger(MetadataView.class.getName()).log(Level.SEVERE, null, ex);
         }
-        addToPref(node, treeTableView.getRoot(), 0);
+        addToPref(pref, treeTableView.getRoot(), 0);
     }
 
     private void addToPref(Preferences pref, TreeItem<TreeTable.Node> rootItem, int count) {
@@ -409,6 +449,10 @@ public class MetadataView extends VBox {
                 addToPref(pref, child, count);
             }
         }
+    }
+
+    private void recordConfig() {
+
     }
 
     public static final String getIdentifierElseName(TreeTable.Node node) {
@@ -471,51 +515,16 @@ public class MetadataView extends VBox {
                 setGraphic(hBox);
             } else if (item instanceof VerticalExtent) {
                 VerticalExtent extent = (VerticalExtent) item;
-                Spinner<Double> min = new Spinner<>(Double.MIN_VALUE, Double.MAX_VALUE, extent.getMinimumValue());
-                Spinner<Double> max = new Spinner<>(Double.MIN_VALUE, Double.MAX_VALUE, extent.getMaximumValue());
-                HBox hBox = new HBox(min, max);
-                hBox.setSpacing(3);
-                setGraphic(hBox);
+                VerticalExtentBox verticalExtent = new VerticalExtentBox(extent);
+                setGraphic(verticalExtent);
             } else if (item instanceof GeographicBoundingBox) {
                 GeographicBoundingBox extent = (GeographicBoundingBox) item;
-                Spinner north = new Spinner(-90, 90, extent.getNorthBoundLatitude());
-                Spinner south = new Spinner(-90, 90, extent.getSouthBoundLatitude());
-                Spinner east = new Spinner(-180, 180, extent.getEastBoundLongitude());
-                Spinner west = new Spinner(-180, 180, extent.getWestBoundLongitude());
-                north.setMaxWidth(120);
-                south.setMaxWidth(120);
-                east.setMaxWidth(120);
-                west.setMaxWidth(120);
-                north.setMinWidth(20);
-                south.setMinWidth(20);
-                east.setMinWidth(20);
-                west.setMinWidth(20);
-                Button fullscreen = new Button("•");
-                BorderPane borderPane = new BorderPane(fullscreen, north, east, south, west);
-                BorderPane.setAlignment(north, Pos.CENTER);
-                BorderPane.setAlignment(south, Pos.CENTER);
-                setGraphic(borderPane);
+                GeographicExtentBox geoExtent = new GeographicExtentBox(extent);
+                setGraphic(geoExtent);
             } else if (item instanceof Identifier) {
                 Identifier id = (Identifier) item;
-                final String codeSpace = id.getCodeSpace();
-                TextField codespace = new TextField(codeSpace + "");
-                codespace.setPromptText("code space");
-                final String codeString = id.getCode();
-                TextField code = new TextField(codeString + "");
-                code.setPromptText("code");
-                final String versionString = id.getVersion();
-                TextField version = new TextField(versionString + "");
-                version.setPromptText("version");
-                final InternationalString descriptionString = id.getDescription();
-                TextField description = new TextField(descriptionString + "");
-                description.setPromptText("description");
-                HBox hBox = new HBox(codespace, code, version);
-                hBox.setSpacing(2);
-                VBox vBox = new VBox(hBox, description);
-                vBox.setFillWidth(true);
-                vBox.setSpacing(2);
-                VBox.setVgrow(description, Priority.ALWAYS);
-                setGraphic(vBox);
+                IdentifierBox identifierBox = new IdentifierBox(id);
+                setGraphic(identifierBox);
             } else if (item instanceof OnlineResource) {
                 OnlineResource resource = (OnlineResource) item;
                 InternationalString name = resource.getName();
@@ -565,7 +574,16 @@ public class MetadataView extends VBox {
                 if (value == null) {
                     setText("");
                 } else {
-                    setText(item.toString());
+                    final TextArea textArea = new TextArea(item.toString());
+                    long newLines = item.toString().chars().filter((ch) -> {
+                        return ch == '\n';
+                    }).count();
+                    textArea.setPrefRowCount((int) (newLines));
+                    textArea.setWrapText(true);
+                    textArea.setMaxHeight(200);
+                    textArea.setMinHeight(20);
+                    textArea.setPrefHeight(USE_COMPUTED_SIZE);
+                    setGraphic(textArea);
                 }
             }
         }
@@ -579,7 +597,9 @@ public class MetadataView extends VBox {
 
         public NameCell() {
             visible = AwesomeDude.createIconLabel(AwesomeIcon.EYE);
+            visible.getStyleClass().add("eye");
             drag = AwesomeDude.createIconLabel(AwesomeIcon.ARROWS);
+            drag.getStyleClass().add("hand");
             hBox = new HBox(visible, drag);
             hBox.setAlignment(Pos.CENTER_RIGHT);
             setGraphic(hBox);

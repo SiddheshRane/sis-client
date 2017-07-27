@@ -6,3 +6,26 @@
 #diagnosticsText {
     -fx-text-fill : #696969;
 }
+
+.latlongspinner .increment-arrow-button {
+    visibility: hidden;
+}
+
+.eye, .hand {
+    visibility: hidden;
+}
+
+.tree-table-row-cell:selected{
+    -fx-background-color:#000000aa;
+}
+
+/*.text-area, .text-field {
+    -fx-background-color: white;
+    -fx-border-color: grey;
+    -fx-border-width: 1px;
+}
+
+.text-area:selected, .text-area:focused , text-field:selected, .text-field:focused{
+    -fx-border-color: #387892;
+    -fx-border-width: 2px;
+}*/

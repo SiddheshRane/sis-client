@@ -9,7 +9,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
 
-<HBox alignment="CENTER_LEFT" pickOnBounds="false" prefHeight="79.0" prefWidth="507.0" spacing="10.0" styleClass="banner" stylesheets="@banner.css" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sis.client.banner.BannerController">
+<HBox pickOnBounds="false" spacing="10.0" styleClass="banner" stylesheets="@banner.css" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sis.client.banner.BannerController">
    <padding>
       <Insets left="5.0" right="5.0" />
    </padding>
@@ -23,9 +23,9 @@
          </padding>
       </VBox>
       <StackPane HBox.hgrow="ALWAYS" />
-      <ImageView cache="true" cacheHint="QUALITY" fitHeight="69.0" fitWidth="69.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true">
+      <ImageView cache="true" cacheHint="QUALITY" fitHeight="50.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true">
          <image>
-            <Image url="@../../../sis-logo-128.png" />
+            <Image url="@../../../sis-logo.png" />
          </image>
          <HBox.margin>
             <Insets bottom="5.0" top="5.0" />
