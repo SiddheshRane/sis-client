@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -29,8 +30,10 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
@@ -42,6 +45,7 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableCell;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableView;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -105,11 +109,53 @@ public class MetadataView extends VBox {
         getChildren().addAll(hBox, treeTableView);
         treeTableView.setColumnResizePolicy(TreeTableView.CONSTRAINED_RESIZE_POLICY);
         treeTableView.setTableMenuButtonVisible(true);
+        treeTableView.addEventHandler(KeyEvent.KEY_PRESSED,
+                                     ke -> {
+                                         //Row reordering by shift+arrow keys
+                                         if (ke.isShiftDown() && ke.getCode().isArrowKey()) {
+                                             TreeItem<TreeTable.Node> item = treeTableView.getSelectionModel().getSelectedItem();
+                                             TreeItem<TreeTable.Node> parent = item.getParent();
+                                             if (parent == null) {
+                                                 return;
+                                             }
+                                             switch (ke.getCode()) {
+                                                 case UP:
+                                                 case KP_UP:
+                                                     TreeItem<TreeTable.Node> previousSibling = item.previousSibling();
+                                                     if (previousSibling == null) {
+                                                         return;
+                                                     }
+                                                     parent.getChildren().remove(previousSibling);
+                                                     int insertHere = parent.getChildren().indexOf(item);
+                                                     parent.getChildren().add(insertHere + 1, previousSibling);
+                                                     treeTableView.getFocusModel().focusPrevious();
+                                                     break;
+                                                 case DOWN:
+                                                 case KP_DOWN:
+                                                     TreeItem<TreeTable.Node> nextSibling = item.nextSibling();
+                                                     if (nextSibling == null) {
+                                                         return;
+                                                     }
+                                                     parent.getChildren().remove(item);
+                                                     int index = parent.getChildren().indexOf(nextSibling);
+                                                     parent.getChildren().add(index + 1, item);
+                                                     treeTableView.getFocusModel().focusNext();
+                                                     break;
+                                             }
+//                                             int itemIndex = treeTableView.getSelectionModel().getSelectedIndex();
+                                             ke.consume();
+                                         }
+                                     });
+        contextMenu = new ContextMenu();
+
+        treeTableView.setContextMenu(contextMenu);
+
         setVgrow(treeTableView, Priority.ALWAYS);
         if (metadata != null) {
             populateTreeTableView(metadata);
         }
     }
+    private ContextMenu contextMenu;
 
     /**
      * Create MetadataView from metadata contained in {@linkplain File}.
@@ -223,6 +269,11 @@ public class MetadataView extends VBox {
             }
         }
         return rootItem;
+    }
+
+    private void createTreeItems(TreeItem<TreeTable.Node> rootItem) {
+        Collection<TreeTable.Node> children = rootItem.getValue().getChildren();
+
     }
 
     /**
