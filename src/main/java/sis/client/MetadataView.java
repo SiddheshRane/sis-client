@@ -30,13 +30,13 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.ToggleButton;
@@ -110,44 +110,60 @@ public class MetadataView extends VBox {
         treeTableView.setColumnResizePolicy(TreeTableView.CONSTRAINED_RESIZE_POLICY);
         treeTableView.setTableMenuButtonVisible(true);
         treeTableView.addEventHandler(KeyEvent.KEY_PRESSED,
-                                     ke -> {
-                                         //Row reordering by shift+arrow keys
-                                         if (ke.isShiftDown() && ke.getCode().isArrowKey()) {
-                                             TreeItem<TreeTable.Node> item = treeTableView.getSelectionModel().getSelectedItem();
-                                             TreeItem<TreeTable.Node> parent = item.getParent();
-                                             if (parent == null) {
-                                                 return;
-                                             }
-                                             switch (ke.getCode()) {
-                                                 case UP:
-                                                 case KP_UP:
-                                                     TreeItem<TreeTable.Node> previousSibling = item.previousSibling();
-                                                     if (previousSibling == null) {
-                                                         return;
-                                                     }
-                                                     parent.getChildren().remove(previousSibling);
-                                                     int insertHere = parent.getChildren().indexOf(item);
-                                                     parent.getChildren().add(insertHere + 1, previousSibling);
-                                                     treeTableView.getFocusModel().focusPrevious();
-                                                     break;
-                                                 case DOWN:
-                                                 case KP_DOWN:
-                                                     TreeItem<TreeTable.Node> nextSibling = item.nextSibling();
-                                                     if (nextSibling == null) {
-                                                         return;
-                                                     }
-                                                     parent.getChildren().remove(item);
-                                                     int index = parent.getChildren().indexOf(nextSibling);
-                                                     parent.getChildren().add(index + 1, item);
-                                                     treeTableView.getFocusModel().focusNext();
-                                                     break;
-                                             }
+                                      ke -> {
+                                          //Row reordering by shift+arrow keys
+                                          if (ke.isShiftDown() && ke.getCode().isArrowKey()) {
+                                              TreeItem<TreeTable.Node> item = treeTableView.getSelectionModel().getSelectedItem();
+                                              TreeItem<TreeTable.Node> parent = item.getParent();
+                                              if (parent == null) {
+                                                  return;
+                                              }
+                                              switch (ke.getCode()) {
+                                                  case UP:
+                                                  case KP_UP:
+                                                      TreeItem<TreeTable.Node> previousSibling = item.previousSibling();
+                                                      if (previousSibling == null) {
+                                                          return;
+                                                      }
+                                                      parent.getChildren().remove(previousSibling);
+                                                      int insertHere = parent.getChildren().indexOf(item);
+                                                      parent.getChildren().add(insertHere + 1, previousSibling);
+                                                      treeTableView.getFocusModel().focusPrevious();
+                                                      break;
+                                                  case DOWN:
+                                                  case KP_DOWN:
+                                                      TreeItem<TreeTable.Node> nextSibling = item.nextSibling();
+                                                      if (nextSibling == null) {
+                                                          return;
+                                                      }
+                                                      parent.getChildren().remove(item);
+                                                      int index = parent.getChildren().indexOf(nextSibling);
+                                                      parent.getChildren().add(index + 1, item);
+                                                      treeTableView.getFocusModel().focusNext();
+                                                      break;
+                                              }
 //                                             int itemIndex = treeTableView.getSelectionModel().getSelectedIndex();
-                                             ke.consume();
-                                         }
-                                     });
-        contextMenu = new ContextMenu();
-
+                                              ke.consume();
+                                          }
+                                      });
+        MenuItem flatten = new MenuItem("Flatten sub tree");
+        flatten.setOnAction(ae -> {
+            TreeItem<TreeTable.Node> selectedItem = treeTableView.getSelectionModel().getSelectedItem();
+            if (selectedItem.getParent() == null || selectedItem.getChildren().isEmpty()) {
+                return;
+            }
+            int indexOf = selectedItem.getParent().getChildren().indexOf(selectedItem);
+            selectedItem.getParent().getChildren().addAll(indexOf, selectedItem.getChildren());
+            selectedItem.getParent().getChildren().remove(selectedItem);
+        });
+        MenuItem hide = new MenuItem("Hide");
+        hide.setOnAction(ae -> {
+            TreeItem<TreeTable.Node> selectedItem = treeTableView.getSelectionModel().getSelectedItem();
+            if (selectedItem.getParent() != null) {
+                selectedItem.getParent().getChildren().remove(selectedItem);
+            }
+        });
+        contextMenu = new ContextMenu(flatten, hide);
         treeTableView.setContextMenu(contextMenu);
 
         setVgrow(treeTableView, Priority.ALWAYS);
