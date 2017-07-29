@@ -75,6 +75,7 @@ import org.opengis.util.InternationalString;
 import sis.client.metadata.ControlledVocabularyBox;
 import sis.client.metadata.GeographicExtentBox;
 import sis.client.metadata.IdentifierBox;
+import sis.client.metadata.SummaryView;
 import sis.client.metadata.VerticalExtentBox;
 
 /**
@@ -83,6 +84,19 @@ import sis.client.metadata.VerticalExtentBox;
  */
 public class MetadataView extends VBox {
 
+    public static final Predicate<TreeTable.Node> NON_EMPTY_LEAF = (t) -> {
+        return !t.isLeaf() || t.getValue(VALUE) != null;
+    };
+    public static final Predicate<TreeTable.Node> EXPAND_SINGLE_CHILD = node -> {
+        return node.getChildren().size() == 1 || node.getParent() == null;
+    };
+
+    public static final String getIdentifierElseName(TreeTable.Node node) {
+        String name = node.getValue(NAME).toString();
+        String id = node.getValue(IDENTIFIER);
+        return id == null ? name : id;
+    }
+
     Preferences rootprefs;
     Preferences currentConfig;
     TreeTable metadata;
@@ -90,10 +104,68 @@ public class MetadataView extends VBox {
     private Button configSave;
     private ComboBox<String> prefBox;
     private ToggleButton showEmptyFields;
+    private  HBox controlsBox;
+
+    private ContextMenu contextMenu;
+
+    private TreeTableColumn<TreeTable.Node, Object> typeColumn;
+    private TreeTableColumn<TreeTable.Node, String> nameColumn;
+    private TreeTableColumn<TreeTable.Node, Object> idColumn;
+
+    /**
+     * Returns true if a {@linkplain TreeTable.NODE} is already covered by a
+     * custom widget, hence a separate {@link TreeItem} need not be created for
+     * it. You can chain this predicate to add your extra rules.
+     */
+    public final Predicate<TreeTable.Node> notCoveredByCustomWidget = new Predicate<TreeTable.Node>() {
+        @Override
+        public boolean test(TreeTable.Node t) {
+            String id = t.getValue(IDENTIFIER);
+            if (id == null) {
+                return true;
+            }
+            //TODO: Replace this hard coded switch case with preferences
+            switch (id) {
+                case "resolution":
+                case "numberOfDimensions":
+                case "dimensionName":
+                case "dimensionSize":
+                case "date":
+                case "dateType":
+                case "westBoundLongitude":
+                case "eastBoundLongitude":
+                case "northBoundLatitude":
+                case "southBoundLatitude":
+                case "minimumValue":
+                case "maximumValue":
+                case "code":
+                case "codeSpace":
+                case "version":
+
+                    return false;
+            }
+            return true;
+        }
+    };
+
+    private final Set<String> shownNodes = new HashSet<>();
+    private Predicate<TreeTable.Node> showNode = (t) -> {
+        return shownNodes.contains(getIdentifierElseName(t));
+    };
+    private ObjectProperty<Predicate<TreeTable.Node>> showNodeProperty = new SimpleObjectProperty<>((t) -> true);
+
+    private Map<String, Integer> userSortTable = new HashMap<>();
+    Comparator<TreeTable.Node> userSortOrder = Comparator.comparingInt((node) -> {
+        String key = getIdentifierElseName(node);
+        return userSortTable.getOrDefault(key, Integer.MAX_VALUE);
+    });
+    private ObjectProperty<Comparator<TreeTable.Node>> comparator = new SimpleObjectProperty<>(userSortOrder);
+    private final Set<String> expandSet = new HashSet<>();
+    private SimpleObjectProperty<Predicate<TreeTable.Node>> expandNodeProperty;
 
     public MetadataView(TreeTable metadata) {
-        rootprefs = Preferences.userNodeForPackage(MetadataView.class);
         this.metadata = metadata;
+        rootprefs = Preferences.userNodeForPackage(MetadataView.class);
         expandNodeProperty = new SimpleObjectProperty<>(EXPAND_SINGLE_CHILD);
         expandNodeProperty.addListener((observable, oldValue, newValue) -> {
             expandNodes(treeTableView.getRoot());
@@ -103,48 +175,49 @@ public class MetadataView extends VBox {
         prefBox.setEditable(true);
         configSave = new Button("Save Config");
         configSave.setTooltip(new Tooltip("Save the current config info to preferences file. On linux it is available at ${user.home}/.java/.userPrefs/" + MetadataView.class.getPackage().getName()));
-        final HBox hBox = new HBox(configSave, prefBox);
-        hBox.setSpacing(5);
-        hBox.setPadding(new Insets(5));
-        getChildren().addAll(hBox, treeTableView);
+        controlsBox = new HBox(configSave, prefBox);
+        controlsBox.setSpacing(5);
+        controlsBox.setPadding(new Insets(5));
+        getChildren().addAll(controlsBox, treeTableView);
         treeTableView.setColumnResizePolicy(TreeTableView.CONSTRAINED_RESIZE_POLICY);
         treeTableView.setTableMenuButtonVisible(true);
         treeTableView.addEventHandler(KeyEvent.KEY_PRESSED,
                                       ke -> {
                                           //Row reordering by shift+arrow keys
-                                          if (ke.isShiftDown() && ke.getCode().isArrowKey()) {
-                                              TreeItem<TreeTable.Node> item = treeTableView.getSelectionModel().getSelectedItem();
-                                              TreeItem<TreeTable.Node> parent = item.getParent();
-                                              if (parent == null) {
-                                                  return;
-                                              }
-                                              switch (ke.getCode()) {
-                                                  case UP:
-                                                  case KP_UP:
-                                                      TreeItem<TreeTable.Node> previousSibling = item.previousSibling();
-                                                      if (previousSibling == null) {
-                                                          return;
-                                                      }
-                                                      parent.getChildren().remove(previousSibling);
-                                                      int insertHere = parent.getChildren().indexOf(item);
-                                                      parent.getChildren().add(insertHere + 1, previousSibling);
-                                                      treeTableView.getFocusModel().focusPrevious();
-                                                      break;
-                                                  case DOWN:
-                                                  case KP_DOWN:
-                                                      TreeItem<TreeTable.Node> nextSibling = item.nextSibling();
-                                                      if (nextSibling == null) {
-                                                          return;
-                                                      }
-                                                      parent.getChildren().remove(item);
-                                                      int index = parent.getChildren().indexOf(nextSibling);
-                                                      parent.getChildren().add(index + 1, item);
-                                                      treeTableView.getFocusModel().focusNext();
-                                                      break;
-                                              }
-//                                             int itemIndex = treeTableView.getSelectionModel().getSelectedIndex();
-                                              ke.consume();
+                                          if (!ke.isShiftDown() || !ke.getCode().isArrowKey()) {
+                                              return;
                                           }
+                                          TreeItem<TreeTable.Node> item = treeTableView.getSelectionModel().getSelectedItem();
+                                          TreeItem<TreeTable.Node> parent = item.getParent();
+                                          if (parent == null) {
+                                              return;
+                                          }
+                                          switch (ke.getCode()) {
+                                              case UP:
+                                              case KP_UP:
+                                                  TreeItem<TreeTable.Node> previousSibling = item.previousSibling();
+                                                  if (previousSibling == null) {
+                                                      return;
+                                                  }
+                                                  parent.getChildren().remove(previousSibling);
+                                                  int insertHere = parent.getChildren().indexOf(item);
+                                                  parent.getChildren().add(insertHere + 1, previousSibling);
+                                                  treeTableView.getFocusModel().focusPrevious();
+                                                  break;
+                                              case DOWN:
+                                              case KP_DOWN:
+                                                  TreeItem<TreeTable.Node> nextSibling = item.nextSibling();
+                                                  if (nextSibling == null) {
+                                                      return;
+                                                  }
+                                                  parent.getChildren().remove(item);
+                                                  int index = parent.getChildren().indexOf(nextSibling);
+                                                  parent.getChildren().add(index + 1, item);
+                                                  treeTableView.getFocusModel().focusNext();
+                                                  break;
+                                          }
+//                                             int itemIndex = treeTableView.getSelectionModel().getSelectedIndex();
+                                          ke.consume();
                                       });
         MenuItem flatten = new MenuItem("Flatten sub tree");
         flatten.setOnAction(ae -> {
@@ -171,7 +244,6 @@ public class MetadataView extends VBox {
             populateTreeTableView(metadata);
         }
     }
-    private ContextMenu contextMenu;
 
     /**
      * Create MetadataView from metadata contained in {@linkplain File}.
@@ -187,7 +259,7 @@ public class MetadataView extends VBox {
                 TreeTable tree;
                 try (DataStore ds = DataStores.open(file)) {
                     Metadata metadata = ds.getMetadata();
-                    tree = MetadataStandard.ISO_19115.asTreeTable(metadata, Metadata.class, ValueExistencePolicy.NON_EMPTY);
+                    tree = MetadataStandard.ISO_19115.asTreeTable(metadata, Metadata.class, ValueExistencePolicy.ALL);
                     MetadataView.this.metadata = tree;
                     Platform.runLater(() -> populateTreeTableView(tree));
                 } catch (DataStoreException ex) {
@@ -261,6 +333,23 @@ public class MetadataView extends VBox {
             treeTableView.getColumns().add(typeColumn);
         }
         loadConfigs();
+        if (metadata.getRoot().getUserObject() instanceof Metadata) {
+            SummaryView summaryView = new SummaryView(metadata);
+
+            ToggleButton summaryToggle = new ToggleButton("Summary");
+            summaryToggle.selectedProperty().addListener((observable, oldValue, newValue) -> {
+                if (newValue) {
+                    getChildren().remove(treeTableView);
+                    getChildren().add(1, summaryView);
+                } else {
+                    getChildren().remove(summaryView);
+                    getChildren().add(1, treeTableView);
+                }
+            });
+            
+            controlsBox.getChildren().add(summaryToggle);
+            summaryToggle.setSelected(true);
+        }
     }
 
     private void updateRoot(TreeTable treeTable) {
@@ -268,9 +357,6 @@ public class MetadataView extends VBox {
         rootItem.setExpanded(true);
         treeTableView.setRoot(rootItem);
     }
-    private TreeTableColumn<TreeTable.Node, Object> typeColumn;
-    private TreeTableColumn<TreeTable.Node, String> nameColumn;
-    private TreeTableColumn<TreeTable.Node, Object> idColumn;
 
     private TreeItem<TreeTable.Node> createTreeItem(TreeTable.Node root) {
         TreeItem<TreeTable.Node> rootItem = new TreeItem<>(root);
@@ -303,61 +389,12 @@ public class MetadataView extends VBox {
      */
     private List<TreeTable.Node> transformChildren(TreeItem<TreeTable.Node> root) {
         List<TreeTable.Node> transformed = root.getValue().getChildren().stream()
-                .filter(notCoveredByCustomWidget)
-                .filter(nonEmptyLeaf)
+                //                .filter(notCoveredByCustomWidget)
+                .filter(NON_EMPTY_LEAF)
                 .filter(showNodeProperty().get())
                 .collect(Collectors.toList());
         return transformed;
     }
-
-    public static final Predicate<TreeTable.Node> nonEmptyLeaf = (t) -> {
-        return !t.isLeaf() || t.getValue(VALUE) != null;
-    };
-    /**
-     * Returns true if a {@linkplain TreeTable.NODE} is already covered by a
-     * custom widget, hence a separate {@link TreeItem} need not be created for
-     * it. You can chain this predicate to add your extra rules.
-     */
-    public final Predicate<TreeTable.Node> notCoveredByCustomWidget = new Predicate<TreeTable.Node>() {
-        @Override
-        public boolean test(TreeTable.Node t) {
-            String id = t.getValue(IDENTIFIER);
-            if (id == null) {
-                return true;
-            }
-            //TODO: Replace this hard coded switch case with preferences
-            switch (id) {
-                case "resolution":
-                case "numberOfDimensions":
-                case "dimensionName":
-                case "dimensionSize":
-                case "date":
-                case "dateType":
-                case "westBoundLongitude":
-                case "eastBoundLongitude":
-                case "northBoundLatitude":
-                case "southBoundLatitude":
-                case "minimumValue":
-                case "maximumValue":
-                case "code":
-                case "codeSpace":
-                case "version":
-
-                    return false;
-            }
-            return true;
-        }
-    };
-
-    public static final Predicate<TreeTable.Node> EXPAND_SINGLE_CHILD = node -> {
-        return node.getChildren().size() == 1 || node.getParent() == null;
-    };
-
-    private final Set<String> shownNodes = new HashSet<>();
-    private Predicate<TreeTable.Node> showNode = (t) -> {
-        return shownNodes.contains(getIdentifierElseName(t));
-    };
-    private ObjectProperty<Predicate<TreeTable.Node>> showNodeProperty = new SimpleObjectProperty<>((t) -> true);
 
     /**
      * A property containing predicate that returns true if the given
@@ -379,13 +416,6 @@ public class MetadataView extends VBox {
         showNodeProperty.set(showNode);
     }
 
-    private Map<String, Integer> userSortTable = new HashMap<>();
-    Comparator<TreeTable.Node> userSortOrder = Comparator.comparingInt((node) -> {
-        String key = getIdentifierElseName(node);
-        return userSortTable.getOrDefault(key, Integer.MAX_VALUE);
-    });
-    private ObjectProperty<Comparator<TreeTable.Node>> comparator = new SimpleObjectProperty<>(userSortOrder);
-
     public ObjectProperty<Comparator<TreeTable.Node>> comparatorProperty() {
         return comparator;
     }
@@ -397,9 +427,6 @@ public class MetadataView extends VBox {
     public void setComparator(Comparator<TreeTable.Node> com) {
         comparatorProperty().set(com);
     }
-
-    private final Set<String> expandSet = new HashSet<>();
-    private SimpleObjectProperty<Predicate<TreeTable.Node>> expandNodeProperty;
 
     /**
      * A property containing predicate that returns true if the given
@@ -520,12 +547,6 @@ public class MetadataView extends VBox {
 
     private void recordConfig() {
 
-    }
-
-    public static final String getIdentifierElseName(TreeTable.Node node) {
-        String name = node.getValue(NAME).toString();
-        String id = node.getValue(IDENTIFIER);
-        return id == null ? name : id;
     }
 
     private static class MetadataCell extends TreeTableCell<TreeTable.Node, TreeTable.Node> {
@@ -662,6 +683,8 @@ public class MetadataView extends VBox {
         private final Label drag;
         private final Label visible;
 
+        private HBox hBox;
+
         public NameCell() {
             visible = AwesomeDude.createIconLabel(AwesomeIcon.EYE);
             visible.getStyleClass().add("eye");
@@ -672,7 +695,6 @@ public class MetadataView extends VBox {
             setGraphic(hBox);
             setContentDisplay(ContentDisplay.RIGHT);
         }
-        private HBox hBox;
 
         @Override
         protected void updateItem(String item, boolean empty) {

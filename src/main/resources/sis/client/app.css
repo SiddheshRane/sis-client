@@ -19,6 +19,18 @@
     -fx-background-color:#000000aa;
 }
 
+.summary .key {
+    -fx-text-fill: #387892;
+    -fx-font-family: "Noto Sans";
+    -fx-font-size: 1.1em;
+    -fx-font-weight: bold;
+    -fx-wrap-text:true;
+    -fx-font-smoothing-type: gray;
+    -fx-text-alignment:right;
+}
+.summary .value {
+    -fx-font: 14px "Noto Sans";
+}
 /*.text-area, .text-field {
     -fx-background-color: white;
     -fx-border-color: grey;
