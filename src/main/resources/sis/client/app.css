@@ -33,7 +33,8 @@
 }
 .summary .header {
     -fx-font-weight:bold;
-    -fx-font-size:1.1em;
+    -fx-font-size:1em;
+    -fx-text-fill:#696969;
 }
 /*.text-area, .text-field {
     -fx-background-color: white;

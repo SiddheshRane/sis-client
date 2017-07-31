@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Line?>
+<?import javafx.scene.text.Font?>
+
+<fx:root styleClass="summary" stylesheets="@../app.css" type="AnchorPane" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <GridPane alignment="TOP_CENTER" hgap="5.0" prefHeight="451.0" prefWidth="545.0" vgap="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <columnConstraints>
+          <ColumnConstraints halignment="RIGHT" hgrow="NEVER" />
+          <ColumnConstraints halignment="LEFT" hgrow="ALWAYS" maxWidth="1.7976931348623157E308" />
+        </columnConstraints>
+        <rowConstraints>
+          <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="SOMETIMES" />
+          <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="SOMETIMES" />
+            <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="SOMETIMES" />
+            <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="SOMETIMES" />
+            <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="SOMETIMES" />
+          <RowConstraints maxHeight="1.7976931348623157E308" minHeight="-Infinity" vgrow="SOMETIMES" />
+            <RowConstraints maxHeight="1.7976931348623157E308" minHeight="-Infinity" vgrow="SOMETIMES" />
+            <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="SOMETIMES" />
+        </rowConstraints>
+         <children>
+            <Label styleClass="key" text="Name " />
+            <Label styleClass="key" text="Datum" GridPane.rowIndex="1" />
+            <Label styleClass="key" text="Bounding Box" GridPane.rowIndex="7" />
+            <Label styleClass="key" text="Prime Meridian" wrapText="true" GridPane.rowIndex="2" />
+            <Label styleClass="key" text="Axis Length" GridPane.rowIndex="3" GridPane.valignment="BOTTOM" />
+            <Label styleClass="key" text="Axes" GridPane.rowIndex="5" />
+            <VBox alignment="CENTER" maxWidth="-Infinity" GridPane.columnIndex="1" GridPane.rowIndex="7">
+               <children>
+                  <Label fx:id="northBound" text="90° N">
+                     <font>
+                        <Font size="17.0" />
+                     </font>
+                  </Label>
+                  <HBox alignment="CENTER">
+                     <children>
+                        <Label fx:id="westBound" text="-180° W">
+                           <font>
+                              <Font size="17.0" />
+                           </font>
+                        </Label>
+                        <StackPane>
+                           <children>
+                              <Line endX="30.0" strokeWidth="2.0" />
+                              <Line endY="30.0" strokeWidth="2.0" />
+                           </children>
+                           <padding>
+                              <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
+                           </padding>
+                        </StackPane>
+                        <Label fx:id="eastBound" text="180° E">
+                           <font>
+                              <Font size="17.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </HBox>
+                  <Label fx:id="southBound" text="-90° S">
+                     <font>
+                        <Font size="17.0" />
+                     </font>
+                  </Label>
+               </children>
+            </VBox>
+            <TextField fx:id="crsName" promptText="CRS Name" GridPane.columnIndex="1" />
+            <TextField fx:id="datumName" promptText="Datum name" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            <ComboBox fx:id="primeMeridian" prefWidth="150.0" promptText="Meridian" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+            <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
+               <children>
+                  <VBox alignment="CENTER">
+                     <children>
+                        <Label styleClass="header" text="Semi Major" />
+                        <Spinner fx:id="semiMajor" />
+                     </children>
+                  </VBox>
+                  <VBox alignment="CENTER">
+                     <children>
+                        <Label styleClass="header" text="Semi Minor" />
+                        <Spinner fx:id="semiMinor" />
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+            <Label styleClass="key" text="Coordinate System Type" GridPane.rowIndex="4" />
+            <ComboBox fx:id="coordSystemType" prefWidth="150.0" promptText="Ellipsoidal" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+            <Label styleClass="key" text="Area" GridPane.rowIndex="6" />
+            <TextArea fx:id="areaDescription" prefRowCount="2" prefWidth="200.0" promptText="Description for Bounding Box" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+            <TableView fx:id="axesTable" editable="true" prefHeight="125.0" prefWidth="347.0" GridPane.columnIndex="1" GridPane.rowIndex="5">
+              <columns>
+                <TableColumn fx:id="axisNameColumn" prefWidth="75.0" text="Name" />
+                <TableColumn fx:id="axisUnitColumn" prefWidth="75.0" text="Unit" />
+                  <TableColumn fx:id="axisDirectionColumn" prefWidth="75.0" text="Direction" />
+              </columns>
+               <columnResizePolicy>
+                  <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+               </columnResizePolicy>
+            </TableView>
+         </children>
+         <padding>
+            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+         </padding>
+      </GridPane>
+   </children>
+</fx:root>
