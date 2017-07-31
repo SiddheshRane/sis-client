@@ -2,6 +2,7 @@ package sis.client.metadata;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
@@ -9,11 +10,12 @@ import java.util.logging.Logger;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
 import org.apache.sis.util.collection.TableColumn;
 import org.apache.sis.util.collection.TreeTable;
+import org.opengis.metadata.Identifier;
+import org.opengis.referencing.ReferenceSystem;
 import org.opengis.util.ControlledVocabulary;
 
 /**
@@ -32,7 +34,7 @@ public class SummaryView extends AnchorPane implements Initializable {
     private Label spatialReferenceSystemText;
 
     @FXML
-    private ComboBox<ControlledVocabulary> spatialRepresentationType;
+    private Label spatialRepresentationTypeText;
 
     @FXML
     private Label northBound;
@@ -93,10 +95,23 @@ public class SummaryView extends AnchorPane implements Initializable {
             eastBound.setText(east.getValue(TableColumn.VALUE).toString());
             westBound.setText(west.getValue(TableColumn.VALUE).toString());
         } else {
-            
+
         }
-        
-        
+
+        //SpatialRepresentationType
+        TreeTable.Node type = getNodeByIdentifierPath(metadata, identificationInfo, "spatialRepresentationType");
+        if (type != null) {
+            ControlledVocabulary cv = (ControlledVocabulary) type.getValue(TableColumn.VALUE);
+            spatialRepresentationTypeText.setText(cv.name());
+        }
+        //SpatialReferenceSystem 
+        TreeTable.Node refSys = getNodeByIdentifierPath(metadata, "referenceSystemInfo");
+        if (refSys != null) {
+            ReferenceSystem ref = (ReferenceSystem) refSys.getValue(TableColumn.VALUE);
+            final Identifier name = ref.getName();
+            spatialReferenceSystemText.setText(name == null ? "" : name.toString());
+        }
+
     }
     public final String geographicElement = "geographicElement";
     public final String extent = "extent";

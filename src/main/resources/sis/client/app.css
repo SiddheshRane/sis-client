@@ -31,6 +31,10 @@
 .summary .value {
     -fx-font: 14px "Noto Sans";
 }
+.summary .header {
+    -fx-font-weight:bold;
+    -fx-font-size:1.1em;
+}
 /*.text-area, .text-field {
     -fx-background-color: white;
     -fx-border-color: grey;
