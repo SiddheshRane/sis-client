@@ -34,7 +34,7 @@
 .summary .header {
     -fx-font-weight:bold;
     -fx-font-size:1em;
-    -fx-text-fill:#696969;
+    -fx-text-fill:#8d8d8d;
 }
 /*.text-area, .text-field {
     -fx-background-color: white;

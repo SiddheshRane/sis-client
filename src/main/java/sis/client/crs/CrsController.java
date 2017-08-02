@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
@@ -15,11 +17,17 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+import org.apache.sis.referencing.CRS;
 import org.opengis.referencing.crs.CRSAuthorityFactory;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.util.FactoryException;
@@ -31,6 +39,8 @@ import org.opengis.util.FactoryException;
  */
 public class CrsController implements Initializable {
 
+    @FXML
+    private VBox root;
     @FXML
     private TextField filter;
     @FXML
@@ -44,7 +54,6 @@ public class CrsController implements Initializable {
     private final FilteredList<Code> filteredCodes;
 
     public CrsController() {
-//        filteredCodes = registeredCodes.filtered((Code t) -> t.getCode().contains("49"));
         filteredCodes = new FilteredList(registeredCodes);
     }
 
@@ -53,15 +62,14 @@ public class CrsController implements Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        table.addEventFilter(KeyEvent.KEY_PRESSED ,ke-> {
-            if (ke.getCode().isLetterKey() || ke.getCode().isDigitKey()) {
-                System.out.println("ke = " + ke);
-                filter.requestFocus();
-                filter.fireEvent(ke.copyFor(filter, filter));
-                ke.consume();
-            }
-        }
-);
+        table.addEventFilter(KeyEvent.KEY_PRESSED, ke -> {
+                         if (ke.getCode().isLetterKey() || ke.getCode().isDigitKey()) {
+                             filter.requestFocus();
+                             filter.fireEvent(ke.copyFor(filter, filter));
+                             ke.consume();
+                         }
+                     }
+        );
         code.setCellValueFactory((TableColumn.CellDataFeatures<Code, String> param) -> new SimpleStringProperty(param.getValue().getCode()));
         description.setCellValueFactory((TableColumn.CellDataFeatures<Code, String> param) -> new SimpleStringProperty(param.getValue().getDescription()));
 
@@ -84,6 +92,10 @@ public class CrsController implements Initializable {
                 }
             }
         }.start();
+
+        MenuItem edit = new MenuItem("Edit");
+        edit.setOnAction(ae -> editCrs());
+        table.setContextMenu(new ContextMenu(edit));
     }
 
     private List<Code> getCodes() throws FactoryException {
@@ -96,4 +108,28 @@ public class CrsController implements Initializable {
         return codes;
     }
 
+    private void editCrs() {
+        Code code = table.getSelectionModel().getSelectedItem();
+        if (code == null) {
+            return;
+        }
+        CoordinateReferenceSystem crs;
+        try {
+            crs = CRS.forCode(code.getCode());
+        } catch (FactoryException ex) {
+            Logger.getLogger(CrsController.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("ex = " + ex);
+            return;
+        }
+
+        CRSEditor crsEditor = new CRSEditor(crs);
+        VBox.setVgrow(crsEditor, Priority.ALWAYS);
+        Button backButton = new Button("Back to CRS list");
+        backButton.setOnAction(ae -> {
+            root.getChildren().clear();
+            root.getChildren().addAll(filter, table);
+        });
+        root.getChildren().clear();
+        root.getChildren().addAll(backButton, crsEditor);
+    }
 }

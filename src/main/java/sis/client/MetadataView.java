@@ -113,7 +113,7 @@ public class MetadataView extends VBox {
     private TreeTableColumn<TreeTable.Node, Object> idColumn;
 
     /**
-     * Returns true if a {@linkplain TreeTable.NODE} is already covered by a
+     * Returns true if a {@code TreeTable.NODE} is already covered by a
      * custom widget, hence a separate {@link TreeItem} need not be created for
      * it. You can chain this predicate to add your extra rules.
      */

@@ -136,13 +136,6 @@ public class AppController implements Initializable {
     }
 
     private void loadPreferences() {
-        Preferences metaPrefs = Preferences.userNodeForPackage(AppController.class);
-        final String IDENTIFIER = "IDENTIFIER";
-        metaPrefs.put("Metadata", IDENTIFIER);
-        metaPrefs.put("Spatial representation info", IDENTIFIER);
-        metaPrefs.put("Extent", IDENTIFIER);
-        System.out.println("path:" + metaPrefs.absolutePath());
-        System.out.println("name:" + metaPrefs.name());
     }
     /**
      * This function generates a graphical {@code Node} to represent
