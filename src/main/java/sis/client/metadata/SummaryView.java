@@ -2,19 +2,26 @@ package sis.client.metadata;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.text.Text;
 import org.apache.sis.util.collection.TableColumn;
 import org.apache.sis.util.collection.TreeTable;
 import org.opengis.metadata.Identifier;
+import org.opengis.metadata.spatial.Dimension;
 import org.opengis.referencing.ReferenceSystem;
 import org.opengis.util.ControlledVocabulary;
 
@@ -47,6 +54,8 @@ public class SummaryView extends AnchorPane implements Initializable {
 
     @FXML
     private Label southBound;
+    @FXML
+    private GridPane axisDimensionsGrid;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -71,7 +80,8 @@ public class SummaryView extends AnchorPane implements Initializable {
         //Title in identificationInfo/citation/title
         TreeTable.Node titleNode = getNodeByIdentifierPath(metadata, identificationInfo, citation, "title");
         if (titleNode != null) {
-            titleText.setText(titleNode.getValue(TableColumn.VALUE).toString());
+            final Object value = titleNode.getValue(TableColumn.VALUE);
+            titleText.setText(Objects.toString(value, ""));
         } else {
             titleText.setText("");
         }
@@ -79,7 +89,7 @@ public class SummaryView extends AnchorPane implements Initializable {
         //Abstract in identificationInfo/abstract
         TreeTable.Node abstrct = getNodeByIdentifierPath(metadata, identificationInfo, "abstract");
         if (abstrct != null) {
-            abstractText.setText(abstrct.getValue(TableColumn.VALUE).toString());
+            abstractText.setText(Objects.toString(abstrct.getValue(TableColumn.VALUE), ""));
         } else {
             abstractText.setText("");
         }
@@ -95,23 +105,47 @@ public class SummaryView extends AnchorPane implements Initializable {
             eastBound.setText(east.getValue(TableColumn.VALUE).toString());
             westBound.setText(west.getValue(TableColumn.VALUE).toString());
         } else {
-
         }
 
         //SpatialRepresentationType
         TreeTable.Node type = getNodeByIdentifierPath(metadata, identificationInfo, "spatialRepresentationType");
         if (type != null) {
             ControlledVocabulary cv = (ControlledVocabulary) type.getValue(TableColumn.VALUE);
-            spatialRepresentationTypeText.setText(cv.name());
+            spatialRepresentationTypeText.setText(cv == null ? "" : cv.name());
         }
         //SpatialReferenceSystem 
         TreeTable.Node refSys = getNodeByIdentifierPath(metadata, "referenceSystemInfo");
         if (refSys != null) {
             ReferenceSystem ref = (ReferenceSystem) refSys.getValue(TableColumn.VALUE);
-            final Identifier name = ref.getName();
-            spatialReferenceSystemText.setText(name == null ? "" : name.toString());
+            if (ref != null) {
+                final Identifier name = ref.getName();
+                spatialReferenceSystemText.setText(Objects.toString(name, ""));
+            }
         }
-
+        //AxisDimensions
+        List<TreeTable.Node> srinfos = getNodesByIdentifierPath(metadata.getRoot(), "spatialRepresentationInfo");
+        List<TreeTable.Node> axisDimensions = Collections.EMPTY_LIST;
+        for (TreeTable.Node srinfo : srinfos) {
+            List<TreeTable.Node> axd = getNodesByIdentifierPath(srinfo, "axisDimensionProperties");
+            if (axd.size() > axisDimensions.size()) {
+                axisDimensions = axd;
+            }
+        }
+        Stream<Dimension> dimensions1 = axisDimensions.stream().map((t) -> {
+            return (Dimension) t.getUserObject();
+        });
+        Stream<Dimension> dimensions2 = axisDimensions.stream().map((t) -> {
+            return (Dimension) t.getUserObject();
+        });
+        List<Text> names = dimensions1.map(t -> t.getDimensionName().name()).peek(System.out::println).map(Text::new).collect(Collectors.toList());
+        List<Text> sizes = dimensions2.map(t -> t.getDimensionSize().toString()).peek(System.out::println).map(Text::new).collect(Collectors.toList());
+        
+        for (Text name : names) {
+            axisDimensionsGrid.addColumn(0, name);
+        }
+        for (Text size : sizes) {
+            axisDimensionsGrid.addColumn(1, size);
+        }
     }
     public final String geographicElement = "geographicElement";
     public final String extent = "extent";
@@ -139,4 +173,27 @@ public class SummaryView extends AnchorPane implements Initializable {
         }
         return root;
     }
+
+    public static List<TreeTable.Node> getNodesByIdentifierPath(TreeTable.Node node, String... steps) {
+        if (node == null) {
+            return null;
+        }
+
+        TreeTable.Node root = node;
+        for (int i = 0; i < steps.length - 1; i++) {
+            String step = steps[i];
+            Optional<TreeTable.Node> stepNode = root.getChildren().stream()
+                    .filter((TreeTable.Node t) -> {
+                        String id = t.getValue(TableColumn.IDENTIFIER);
+                        return step.equals(id);
+                    })
+                    .findFirst();
+            if (!stepNode.isPresent()) {
+                return Collections.<TreeTable.Node>emptyList();
+            }
+            root = stepNode.get();
+        }
+        return root.getChildren().stream().filter((t) -> steps[steps.length - 1].equals(t.getValue(TableColumn.IDENTIFIER))).collect(Collectors.toList());
+    }
+
 }

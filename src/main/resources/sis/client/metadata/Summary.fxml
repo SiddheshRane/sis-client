@@ -25,7 +25,7 @@
           <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="SOMETIMES" />
             <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="SOMETIMES" />
             <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="SOMETIMES" />
-            <RowConstraints maxHeight="1.7976931348623157E308" minHeight="-Infinity" vgrow="SOMETIMES" />
+            <RowConstraints vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
             <Label styleClass="key" text="Title " />
@@ -39,17 +39,17 @@
             <Label styleClass="key" text="Spatial Reference System " wrapText="true" GridPane.rowIndex="3" />
             <Label styleClass="key" text="Spatial Representation Type " GridPane.rowIndex="4" />
             <Label styleClass="key" text="Axes Dimensions " GridPane.rowIndex="5" />
-            <Label fx:id="spatialReferenceSystemText" layoutX="230.0" layoutY="23.0" styleClass="value" text="WGS 84" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+            <Label fx:id="spatialReferenceSystemText" layoutX="230.0" layoutY="23.0" styleClass="value" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="3" />
             <VBox alignment="CENTER" maxWidth="-Infinity" GridPane.columnIndex="1" GridPane.rowIndex="2">
                <children>
-                  <Label fx:id="northBound" text="90° N">
+                  <Label fx:id="northBound" text="N">
                      <font>
                         <Font size="17.0" />
                      </font>
                   </Label>
                   <HBox alignment="CENTER">
                      <children>
-                        <Label fx:id="westBound" text="-180° W">
+                        <Label fx:id="westBound" text="W">
                            <font>
                               <Font size="17.0" />
                            </font>
@@ -63,28 +63,28 @@
                               <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
                            </padding>
                         </StackPane>
-                        <Label fx:id="eastBound" text="180° E">
+                        <Label fx:id="eastBound" text="E">
                            <font>
                               <Font size="17.0" />
                            </font>
                         </Label>
                      </children>
                   </HBox>
-                  <Label fx:id="southBound" text="-90° S">
+                  <Label fx:id="southBound" text="S">
                      <font>
                         <Font size="17.0" />
                      </font>
                   </Label>
                </children>
             </VBox>
-            <Label fx:id="spatialRepresentationTypeText" text="Type" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-            <GridPane alignment="CENTER" gridLinesVisible="true" GridPane.columnIndex="1" GridPane.rowIndex="5">
+            <Label fx:id="spatialRepresentationTypeText" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+            <GridPane fx:id="axisDimensionsGrid" alignment="CENTER_LEFT" hgap="5.0" vgap="5.0" GridPane.columnIndex="1" GridPane.rowIndex="5">
               <columnConstraints>
-                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                <ColumnConstraints />
+                <ColumnConstraints hgrow="SOMETIMES" />
               </columnConstraints>
               <rowConstraints>
-                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints maxHeight="-Infinity" vgrow="SOMETIMES" />
               </rowConstraints>
                <children>
                   <Label styleClass="header" text="Name" />
