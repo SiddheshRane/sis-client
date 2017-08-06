@@ -53,8 +53,6 @@ public class AppController implements Initializable {
     @FXML
     Tab homeTab;
     @FXML
-    Tab mapTab;
-    @FXML
     Tab fileTab;
 
     Pane dndPane;
@@ -66,7 +64,6 @@ public class AppController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        mapTab.setContent(map);
         dndController.setFileNodeFactory(this::createDisplayNode);
 
         initAbout();
@@ -96,10 +93,8 @@ public class AppController implements Initializable {
     }
 
     public AppController() {
-        map = new Map();
         loadPreferences();
     }
-    private final Map map;
 
     @FXML
     void onDragEntered(DragEvent de) {
