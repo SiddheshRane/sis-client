@@ -5,7 +5,6 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Spinner?>
-<?import javafx.scene.control.SpinnerValueFactory.DoubleSpinnerValueFactory?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextArea?>
@@ -26,8 +25,8 @@
             <content>
                 <GridPane fx:id="grid" alignment="TOP_CENTER" hgap="5.0" prefHeight="451.0" prefWidth="545.0" vgap="10.0">
                     <columnConstraints>
-                        <ColumnConstraints halignment="RIGHT" hgrow="NEVER" />
-                        <ColumnConstraints halignment="LEFT" hgrow="ALWAYS" maxWidth="1.7976931348623157E308" />
+                        <ColumnConstraints halignment="RIGHT" hgrow="NEVER" minWidth="-Infinity" />
+                        <ColumnConstraints halignment="LEFT" hgrow="ALWAYS" maxWidth="1.7976931348623157E308" minWidth="200.0" />
                     </columnConstraints>
                     <rowConstraints>
                         <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="SOMETIMES" />
@@ -46,28 +45,28 @@
                         <Label styleClass="key" text="Prime Meridian" wrapText="true" GridPane.rowIndex="2" />
                         <Label styleClass="key" text="Axis Length" GridPane.rowIndex="3" GridPane.valignment="CENTER" />
                         <Label styleClass="key" text="Axes" GridPane.rowIndex="5" />
-                        <TextField fx:id="crsName" promptText="CRS Name" GridPane.columnIndex="1" />
-                        <TextField fx:id="datumName" promptText="Datum name" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                        <ComboBox fx:id="primeMeridian" maxWidth="1.7976931348623157E308" promptText="Meridian Name" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                        <TextField fx:id="crsName" minWidth="200.0" promptText="CRS Name" GridPane.columnIndex="1" />
+                        <TextField fx:id="datumName" minWidth="200.0" promptText="Datum name" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                        <ComboBox fx:id="primeMeridian" maxWidth="1.7976931348623157E308" minWidth="200.0" promptText="Not Available" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                         <VBox spacing="4.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
                             <children>
-                                <Spinner fx:id="semiMajor" maxWidth="1.7976931348623157E308" styleClass="arrows-on-left-vertical"> 
-                                    <valueFactory>
-                                        <SpinnerValueFactory.DoubleSpinnerValueFactory amountToStepBy="0.30" max="Infinity" min="-Infinity" />
-                                    </valueFactory>
+                                <Spinner fx:id="semiMajor" editable="true" maxWidth="1.7976931348623157E308" minWidth="200.0" styleClass="arrows-on-left-vertical"> 
+<!--                                    <valueFactory>
+                                        <SpinnerValueFactory.DoubleSpinnerValueFactory amountToStepBy="0.30" max="Infinity" min="0.0"  />
+                                    </valueFactory>-->
                                     <VBox.margin>
                                         <Insets />
                                     </VBox.margin>
                                 </Spinner>
-                                <Spinner fx:id="semiMinor" maxWidth="1.7976931348623157E308" styleClass="arrows-on-left-vertical">
-                                    <valueFactory>
-                                        <SpinnerValueFactory.DoubleSpinnerValueFactory amountToStepBy="0.30" max="Infinity" min="-Infinity" />
-                                    </valueFactory>
+                                <Spinner fx:id="semiMinor" editable="true" maxWidth="1.7976931348623157E308" minWidth="200.0" styleClass="arrows-on-left-vertical">
+<!--                                    <valueFactory>
+                                        <SpinnerValueFactory.DoubleSpinnerValueFactory amountToStepBy="0.30" max="Infinity" min="0.0" />
+                                    </valueFactory>-->
                                 </Spinner>
                             </children>
                         </VBox>
-                        <ComboBox fx:id="coordSystemType" maxWidth="1.7976931348623157E308" promptText="Ellipsoidal" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-                        <TableView fx:id="axesTable" editable="true" prefHeight="125.0" prefWidth="347.0" GridPane.columnIndex="1" GridPane.rowIndex="5">
+                        <ComboBox fx:id="coordSystemType" maxWidth="1.7976931348623157E308" minWidth="200.0" promptText="Ellipsoidal" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                        <TableView fx:id="axesTable" editable="true" minWidth="200.0" prefHeight="125.0" prefWidth="347.0" GridPane.columnIndex="1" GridPane.rowIndex="5">
                             <columns>
                                 <TableColumn fx:id="axisNameColumn" prefWidth="75.0" text="Name" />
                                 <TableColumn fx:id="axisUnitColumn" prefWidth="75.0" text="Unit" />
@@ -77,7 +76,7 @@
                                 <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
                             </columnResizePolicy>
                         </TableView>
-                        <TextArea fx:id="areaDescription" prefRowCount="2" prefWidth="200.0" promptText="Description for Bounding Box" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                        <TextArea fx:id="areaDescription" minWidth="200.0" prefRowCount="2" prefWidth="200.0" promptText="Description for Bounding Box" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="6" />
                         <VBox alignment="CENTER" maxWidth="-Infinity" visible="false" GridPane.columnIndex="1" GridPane.rowIndex="7">
                             <children>
                                 <Label fx:id="northBound" text="90° N">

@@ -11,6 +11,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Spinner;
+import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.layout.BorderPane;
 import org.opengis.metadata.extent.GeographicBoundingBox;
 
@@ -60,6 +61,10 @@ public class GeographicExtentBox extends BorderPane implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        north.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(-90, 90));
+        south.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(-90, 90));
+        east.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(-180, 180));
+        west.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(-180, 180));
         valueProperty().addListener((observable, oldValue, newValue) -> {
             north.getValueFactory().setValue(newValue.getNorthBoundLatitude());
             south.getValueFactory().setValue(newValue.getSouthBoundLatitude());

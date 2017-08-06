@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
@@ -27,7 +25,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import org.apache.sis.referencing.CRS;
 import org.opengis.referencing.crs.CRSAuthorityFactory;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.util.FactoryException;
@@ -114,15 +111,8 @@ public class CrsController implements Initializable {
             return;
         }
         CoordinateReferenceSystem crs;
-        try {
-            crs = CRS.forCode(code.getCode());
-        } catch (FactoryException ex) {
-            Logger.getLogger(CrsController.class.getName()).log(Level.SEVERE, null, ex);
-            System.out.println("ex = " + ex);
-            return;
-        }
 
-        CRSEditor crsEditor = new CRSEditor(crs);
+        CRSEditor crsEditor = new CRSEditor(code.getCode());
         VBox.setVgrow(crsEditor, Priority.ALWAYS);
         Button backButton = new Button("Back to CRS list");
         backButton.setOnAction(ae -> {

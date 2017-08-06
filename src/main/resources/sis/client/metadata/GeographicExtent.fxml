@@ -11,9 +11,6 @@
           <Label alignment="CENTER" contentDisplay="TOP" text="North Bound" BorderPane.alignment="BOTTOM_CENTER">
          <graphic>
                 <Spinner fx:id="north" editable="true" minWidth="50.0" prefWidth="120.0">
-                    <valueFactory>
-                        <SpinnerValueFactory.DoubleSpinnerValueFactory max="90.0" min="-90.0" value="0.0" />
-                    </valueFactory>
                 </Spinner>
          </graphic>
       </Label>
@@ -22,9 +19,6 @@
           <Label contentDisplay="BOTTOM" text="South Bound" BorderPane.alignment="TOP_CENTER">
          <graphic>
                 <Spinner fx:id="south" editable="true" prefWidth="120.0">
-                    <valueFactory>
-                        <SpinnerValueFactory.DoubleSpinnerValueFactory max="90.0" min="-90.0" value="0.0" />
-                    </valueFactory>
                 </Spinner>
          </graphic>
       </Label>
@@ -33,9 +27,6 @@
           <Label text="West Bound" BorderPane.alignment="CENTER_LEFT">
          <graphic>
                 <Spinner fx:id="west" editable="true" prefWidth="120.0">
-                    <valueFactory>
-                        <SpinnerValueFactory.DoubleSpinnerValueFactory max="180.0" min="-180.0" value="0.0" />
-                    </valueFactory>
                 </Spinner>
          </graphic>
       </Label>
@@ -44,9 +35,6 @@
           <Label contentDisplay="RIGHT" text="East Bound" BorderPane.alignment="CENTER_RIGHT">
          <graphic>
                 <Spinner fx:id="east" editable="true" prefWidth="120.0">
-                    <valueFactory>
-                        <SpinnerValueFactory.DoubleSpinnerValueFactory max="180.0" min="-180.0" value="0.0" />
-                    </valueFactory>
                 </Spinner>
          </graphic>
       </Label>

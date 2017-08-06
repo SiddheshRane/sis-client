@@ -10,7 +10,37 @@
                 <goal>org.codehaus.mojo:exec-maven-plugin:1.2.1:exec</goal>
             </goals>
             <properties>
-                <exec.args>-classpath %classpath sis.client.MainApp</exec.args>
+                <exec.args>-classpath %classpath sis.client.MainApp -DSIS_DATA=/home/siddhesh/Apache/apache-sis-0.8-SNAPSHOT/data</exec.args>
+                <exec.executable>java</exec.executable>
+                <Env.SIS_DATA>/home/siddhesh/Apache/apache-sis-0.8-SNAPSHOT/data</Env.SIS_DATA>
+            </properties>
+        </action>
+        <action>
+            <actionName>debug</actionName>
+            <packagings>
+                <packaging>jar</packaging>
+            </packagings>
+            <goals>
+                <goal>process-classes</goal>
+                <goal>org.codehaus.mojo:exec-maven-plugin:1.2.1:exec</goal>
+            </goals>
+            <properties>
+                <exec.args>-Xdebug -Xrunjdwp:transport=dt_socket,server=n,address=${jpda.address} -classpath %classpath sis.client.MainApp -DSIS_DATA=/home/siddhesh/Apache/apache-sis-0.8-SNAPSHOT/data</exec.args>
+                <exec.executable>java</exec.executable>
+                <jpda.listen>true</jpda.listen>
+            </properties>
+        </action>
+        <action>
+            <actionName>profile</actionName>
+            <packagings>
+                <packaging>jar</packaging>
+            </packagings>
+            <goals>
+                <goal>process-classes</goal>
+                <goal>org.codehaus.mojo:exec-maven-plugin:1.2.1:exec</goal>
+            </goals>
+            <properties>
+                <exec.args>-classpath %classpath sis.client.MainApp -DSIS_DATA=/home/siddhesh/Apache/apache-sis-0.8-SNAPSHOT/data</exec.args>
                 <exec.executable>java</exec.executable>
             </properties>
         </action>
