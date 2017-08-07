@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.effect.DropShadow?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Text?>
+
+<HBox pickOnBounds="false" spacing="10.0" styleClass="banner" stylesheets="@banner.css" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.apache.sis.desktop.banner.BannerController">
+   <padding>
+      <Insets left="5.0" right="5.0" />
+   </padding>
+   <children>
+      <VBox alignment="CENTER_LEFT">
+         <children>
+            <Text fx:id="title" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="heading" text="Apache SIS" />
+         </children>
+         <padding>
+            <Insets left="5.0" />
+         </padding>
+      </VBox>
+      <StackPane HBox.hgrow="ALWAYS" />
+      <ImageView cache="true" cacheHint="QUALITY" fitHeight="50.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../../../sis-logo.png" />
+         </image>
+         <HBox.margin>
+            <Insets bottom="5.0" top="5.0" />
+         </HBox.margin>
+      </ImageView>
+   </children>
+   <effect>
+      <DropShadow height="54.39" radius="18.3475" spread="0.05" />
+   </effect>
+</HBox>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.StackPane?>
+
+<AnchorPane id="AnchorPane" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" stylesheets="@app.css" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.apache.sis.desktop.AppController">
+   <children>
+      <BorderPane fx:id="borderPane" onDragEntered="#onDragEntered" onDragExited="#onDragExited" prefHeight="400.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <center>
+            <TabPane fx:id="tabPane" tabClosingPolicy="ALL_TABS" BorderPane.alignment="CENTER">
+               <tabs>
+                  <Tab fx:id="homeTab" closable="false" text="Home">
+                     <content>
+                        <StackPane fx:id="homePane" />
+                     </content>
+                  </Tab>
+                  <Tab fx:id="fileTab" closable="false" text="Files">
+                     <content>
+                        <fx:include fx:id="dnd" source="dnd/dnd.fxml" />
+                     </content>
+                  </Tab>
+                  <Tab closable="false" text="CRS">
+                     <content>
+                        <fx:include source="crs/crs.fxml" />
+                     </content>
+                  </Tab>
+                  <Tab closable="false" text="Extent">
+                     <content>
+                        <fx:include source="MercatorExtent.fxml" />
+                     </content>
+                  </Tab>
+               </tabs>
+            </TabPane>
+         </center>
+         <top>
+            <fx:include fx:id="banner" source="banner/banner.fxml" />
+         </top></BorderPane>
+   </children>
+</AnchorPane>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<fx:root spacing="4.0" type="HBox" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <VBox alignment="CENTER" spacing="2.0">
+         <children>
+            <Label text="Start date " />
+            <DatePicker fx:id="start" minWidth="100.0" prefWidth="150.0" promptText="Start date" />
+         </children>
+      </VBox>
+      <VBox alignment="CENTER" spacing="2.0">
+         <children>
+            <Label text="End date" />
+            <DatePicker fx:id="end" minWidth="100.0" prefWidth="150.0" promptText="End date" />
+         </children>
+      </VBox>
+   </children>
+   <padding>
+      <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
+   </padding>
+</fx:root>
