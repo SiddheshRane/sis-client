@@ -3,12 +3,12 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Spinner?>
-<?import javafx.scene.control.SpinnerValueFactory.DoubleSpinnerValueFactory?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.text.Text?>
 
 <fx:root maxWidth="-Infinity" type="BorderPane" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1">
     <top>
-          <Label alignment="CENTER" contentDisplay="TOP" text="North Bound" BorderPane.alignment="BOTTOM_CENTER">
+          <Label alignment="CENTER" contentDisplay="TOP" text="North" BorderPane.alignment="BOTTOM_CENTER">
          <graphic>
                 <Spinner fx:id="north" editable="true" minWidth="50.0" prefWidth="120.0">
                 </Spinner>
@@ -16,7 +16,7 @@
       </Label>
     </top>
     <bottom>
-          <Label contentDisplay="BOTTOM" text="South Bound" BorderPane.alignment="TOP_CENTER">
+          <Label contentDisplay="BOTTOM" text="South" BorderPane.alignment="TOP_CENTER">
          <graphic>
                 <Spinner fx:id="south" editable="true" prefWidth="120.0">
                 </Spinner>
@@ -24,7 +24,7 @@
       </Label>
     </bottom>
     <left>
-          <Label text="West Bound" BorderPane.alignment="CENTER_LEFT">
+          <Label text="West" BorderPane.alignment="CENTER_LEFT">
          <graphic>
                 <Spinner fx:id="west" editable="true" prefWidth="120.0">
                 </Spinner>
@@ -32,7 +32,7 @@
       </Label>
     </left>
     <right>
-          <Label contentDisplay="RIGHT" text="East Bound" BorderPane.alignment="CENTER_RIGHT">
+          <Label contentDisplay="RIGHT" text="East" BorderPane.alignment="CENTER_RIGHT">
          <graphic>
                 <Spinner fx:id="east" editable="true" prefWidth="120.0">
                 </Spinner>
@@ -42,4 +42,7 @@
     <padding>
         <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
     </padding>
+   <center>
+      <Text strokeType="OUTSIDE" strokeWidth="0.0" text="    " BorderPane.alignment="CENTER" />
+   </center>
 </fx:root>

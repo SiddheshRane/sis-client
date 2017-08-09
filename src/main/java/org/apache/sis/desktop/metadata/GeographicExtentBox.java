@@ -12,7 +12,11 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.layout.BorderPane;
+import javafx.util.converter.DoubleStringConverter;
+import javafx.util.converter.FormatStringConverter;
+import org.apache.sis.measure.AngleFormat;
 import org.opengis.metadata.extent.GeographicBoundingBox;
 
 /**
@@ -65,6 +69,12 @@ public class GeographicExtentBox extends BorderPane implements Initializable {
         south.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(-90, 90));
         east.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(-180, 180));
         west.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(-180, 180));
+        
+        north.getEditor().setTextFormatter(new TextFormatter(new FormatStringConverter(AngleFormat.getInstance())));
+        south.getEditor().setTextFormatter(new TextFormatter(new FormatStringConverter(AngleFormat.getInstance())));
+        west.getEditor().setTextFormatter(new TextFormatter(new FormatStringConverter(AngleFormat.getInstance())));
+        east.getEditor().setTextFormatter(new TextFormatter(new FormatStringConverter(AngleFormat.getInstance())));
+        
         valueProperty().addListener((observable, oldValue, newValue) -> {
             north.getValueFactory().setValue(newValue.getNorthBoundLatitude());
             south.getValueFactory().setValue(newValue.getSouthBoundLatitude());

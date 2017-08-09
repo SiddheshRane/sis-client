@@ -71,6 +71,7 @@
 .file-vbox .filename {
     -fx-font: 14px 'Noto Sans';
     -fx-fill: darkgrey;
+    -fx-wrap-text:true;
 }
 .file-vbox .type {
     -fx-fill: grey;

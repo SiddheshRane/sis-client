@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
+<?import javafx.scene.input.KeyCodeCombination?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.StackPane?>
@@ -27,16 +31,33 @@
                         <fx:include source="crs/crs.fxml" />
                      </content>
                   </Tab>
-                  <Tab closable="false" text="Extent">
+                  <Tab text="Feature Editor">
                      <content>
-                        <fx:include source="MercatorExtent.fxml" />
+                        <fx:include source="FeatureEditor.fxml" />
                      </content>
                   </Tab>
                </tabs>
             </TabPane>
          </center>
          <top>
-            <fx:include fx:id="banner" source="banner/banner.fxml" />
+            <MenuBar fx:id="menuBar" BorderPane.alignment="CENTER">
+              <menus>
+                <Menu mnemonicParsing="false" text="File">
+                  <items>
+                    <MenuItem fx:id="openmenu" mnemonicParsing="false" text="Open">
+                           <accelerator>
+                              <KeyCodeCombination alt="UP" code="O" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                           </accelerator>
+                        </MenuItem>
+                  </items>
+                </Menu>
+                <Menu mnemonicParsing="false" text="Help">
+                  <items>
+                    <MenuItem fx:id="aboutMenu" mnemonicParsing="false" onAction="#showAboutWindow" text="About" />
+                  </items>
+                </Menu>
+              </menus>
+            </MenuBar>
          </top></BorderPane>
    </children>
 </AnchorPane>

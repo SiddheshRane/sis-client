@@ -1,7 +1,5 @@
 package org.apache.sis.desktop;
 
-import de.jensd.fx.fontawesome.AwesomeDude;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
@@ -27,11 +25,9 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Hyperlink;
@@ -152,7 +148,7 @@ public class MetadataView extends VBox {
     private Predicate<TreeTable.Node> showNode = (t) -> {
         return shownNodes.contains(getIdentifierElseName(t));
     };
-    private ObjectProperty<Predicate<TreeTable.Node>> showNodeProperty = new SimpleObjectProperty<>((t) -> true);
+    private ObjectProperty<Predicate<TreeTable.Node>> showNodeProperty = new SimpleObjectProperty<>(NON_EMPTY_LEAF.and(notCoveredByCustomWidget));
 
     private Map<String, Integer> userSortTable = new HashMap<>();
     Comparator<TreeTable.Node> userSortOrder = Comparator.comparingInt((node) -> {
@@ -179,6 +175,7 @@ public class MetadataView extends VBox {
         controlsBox.setSpacing(5);
         controlsBox.setPadding(new Insets(5));
         getChildren().addAll(controlsBox, treeTableView);
+        treeTableView.setShowRoot(false);
         treeTableView.setColumnResizePolicy(TreeTableView.CONSTRAINED_RESIZE_POLICY);
         treeTableView.setTableMenuButtonVisible(true);
         treeTableView.addEventHandler(KeyEvent.KEY_PRESSED,
@@ -291,9 +288,7 @@ public class MetadataView extends VBox {
             value = value == null ? "" : value;
             return new SimpleStringProperty(value);
         });
-        nameColumn.setCellFactory((param) -> {
-            return new NameCell();
-        });
+
         treeTableView.getColumns().add(nameColumn);
 
         //TEXT column
@@ -353,48 +348,28 @@ public class MetadataView extends VBox {
     }
 
     private void updateRoot(TreeTable treeTable) {
-        TreeItem<TreeTable.Node> rootItem = createTreeItem(treeTable.getRoot());
+        TreeItem<TreeTable.Node> rootItem = new TreeItem<TreeTable.Node>(treeTable.getRoot());
+        createTreeItems(rootItem, treeTable.getRoot().getChildren());
         rootItem.setExpanded(true);
         treeTableView.setRoot(rootItem);
     }
 
-    private TreeItem<TreeTable.Node> createTreeItem(TreeTable.Node root) {
-        TreeItem<TreeTable.Node> rootItem = new TreeItem<>(root);
-        rootItem.setExpanded(getExpandNode().test(root));
-        if (!root.isLeaf()) {
-            List<TreeTable.Node> transformChildren = transformChildren(rootItem);
-            for (TreeTable.Node child : transformChildren) {
-                TreeItem<TreeTable.Node> childItem = createTreeItem(child);
-                if (childItem != null) {
-                    rootItem.getChildren().add(childItem);
-                }
+    private void createTreeItems(TreeItem<TreeTable.Node> rootItem, Collection<TreeTable.Node> children) {
+        for (TreeTable.Node node : children) {
+            TreeItem parent = rootItem;
+            //include this node in the tree table view?
+            if (getShowNode().test(node)) {
+                parent = new TreeItem(node);
+                rootItem.getChildren().add(parent);
+                //keep expanded?
+                parent.setExpanded(getExpandNode().test(node));
+            }
+            if (!node.isLeaf()) {
+                createTreeItems(parent, node.getChildren());
             }
         }
-        return rootItem;
     }
 
-    private void createTreeItems(TreeItem<TreeTable.Node> rootItem) {
-        Collection<TreeTable.Node> children = rootItem.getValue().getChildren();
-
-    }
-
-    /**
-     * Given a root node return a list of its filtered and sorted children. The
-     * original list should not be modified. A new list must be returned. This
-     * list will not be modified and so an immutable or read only list can be
-     * returned
-     *
-     * @param root
-     * @return a list of transformed children
-     */
-    private List<TreeTable.Node> transformChildren(TreeItem<TreeTable.Node> root) {
-        List<TreeTable.Node> transformed = root.getValue().getChildren().stream()
-                .filter(notCoveredByCustomWidget)
-                .filter(NON_EMPTY_LEAF)
-                .filter(showNodeProperty().get())
-                .collect(Collectors.toList());
-        return transformed;
-    }
 
     /**
      * A property containing predicate that returns true if the given
@@ -678,33 +653,4 @@ public class MetadataView extends VBox {
 
     }
 
-    private static class NameCell extends TreeTableCell<TreeTable.Node, String> {
-
-        private final Label drag;
-        private final Label visible;
-
-        private HBox hBox;
-
-        public NameCell() {
-            visible = AwesomeDude.createIconLabel(AwesomeIcon.EYE);
-            visible.getStyleClass().add("eye");
-            drag = AwesomeDude.createIconLabel(AwesomeIcon.ARROWS);
-            drag.getStyleClass().add("hand");
-            hBox = new HBox(visible, drag);
-            hBox.setAlignment(Pos.CENTER_RIGHT);
-            setGraphic(hBox);
-            setContentDisplay(ContentDisplay.RIGHT);
-        }
-
-        @Override
-        protected void updateItem(String item, boolean empty) {
-            super.updateItem(item, empty);
-            if (empty) {
-                setGraphic(null);
-            } else {
-                setGraphic(hBox);
-            }
-            setText(item);
-        }
-    }
 }

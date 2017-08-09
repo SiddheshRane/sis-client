@@ -10,12 +10,13 @@ import java.util.ResourceBundle;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.prefs.Preferences;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -25,14 +26,14 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import org.apache.sis.setup.About;
 import org.apache.sis.storage.DataStoreException;
 import org.apache.sis.storage.DataStores;
 import org.apache.sis.util.collection.TableColumn;
 import org.apache.sis.util.collection.TreeTable;
-import org.apache.sis.desktop.banner.BannerController;
 import org.apache.sis.desktop.dnd.DndController;
-import org.apache.sis.desktop.map.Map;
 
 /**
  * FXML Controller class
@@ -41,13 +42,17 @@ import org.apache.sis.desktop.map.Map;
  */
 public class AppController implements Initializable {
 
-    @FXML
-    Pane banner;
-    @FXML
-    BannerController bannerController;
+
     @FXML
     BorderPane borderPane;
 
+    @FXML
+    private MenuBar menuBar;
+    @FXML
+    private MenuItem openMenu;
+    @FXML
+    private MenuItem aboutMenu;
+    
     @FXML
     TabPane tabPane;
     @FXML
@@ -65,11 +70,10 @@ public class AppController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         dndController.setFileNodeFactory(this::createDisplayNode);
-
-        initAbout();
     }
 
-    private void initAbout() {
+    @FXML
+    private void showAboutWindow() {
         final TreeTable configuration = About.configuration();
         MetadataView sisabout = new MetadataView(configuration);
         sisabout.setExpandNode(new Predicate<TreeTable.Node>() {
@@ -89,7 +93,11 @@ public class AppController implements Initializable {
                 return false;
             }
         });
-        homePane.getChildren().add(sisabout);
+        
+        Stage aboutWindow = new Stage(StageStyle.UTILITY);
+        aboutWindow.setTitle("About");
+        aboutWindow.setScene(new Scene(sisabout));
+        aboutWindow.show();
     }
 
     public AppController() {
@@ -163,7 +171,9 @@ public class AppController implements Initializable {
         openMeta.setOnAction(ae -> {
             openMetadataTab(file);
         });
-        ContextMenu cm = new ContextMenu(openMeta);
+        MenuItem openFeatures = new MenuItem("check for features");
+        openFeatures.setOnAction(ae-> VectorEditor.loadFile(file));
+        ContextMenu cm = new ContextMenu(openMeta, openFeatures);
 
         vBox.setOnContextMenuRequested(cme -> {
             cm.show(vBox, cme.getScreenX(), cme.getScreenY());

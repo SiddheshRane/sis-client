@@ -25,6 +25,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import org.apache.sis.referencing.CRS;
 import org.opengis.referencing.crs.CRSAuthorityFactory;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.util.FactoryException;
@@ -96,7 +97,7 @@ public class CrsController implements Initializable {
     }
 
     private List<Code> getCodes() throws FactoryException {
-        final CRSAuthorityFactory factory = org.apache.sis.referencing.CRS.getAuthorityFactory(null);
+        final CRSAuthorityFactory factory = CRS.getAuthorityFactory(null);
         final Set<String> strs = factory.getAuthorityCodes(CoordinateReferenceSystem.class);
         final List<Code> codes = new ArrayList<>();
         for (String str : strs) {

@@ -31,8 +31,6 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.Text;
 import javafx.util.StringConverter;
-import javafx.util.converter.FormatStringConverter;
-import org.apache.sis.internal.metadata.AxisDirections;
 import org.apache.sis.referencing.CRS;
 import org.opengis.metadata.extent.Extent;
 import org.opengis.metadata.extent.GeographicBoundingBox;
@@ -51,6 +49,7 @@ import org.opengis.referencing.datum.PrimeMeridian;
 import org.opengis.util.FactoryException;
 import org.opengis.util.InternationalString;
 import org.apache.sis.desktop.metadata.GeographicExtentBox;
+import org.apache.sis.measure.AngleFormat;
 
 /**
  * FXML Controller class
@@ -110,11 +109,13 @@ public class CRSEditor extends AnchorPane implements Initializable {
     @FXML
     private Label southBound;
     @FXML
-    private TextField crsName;
+    private ComboBox crsName;
     @FXML
     private TextField datumName;
     @FXML
     private ComboBox<PrimeMeridian> primeMeridian;
+    @FXML
+    private Text meridianLongitude;
     @FXML
     private Spinner<Double> semiMajor;
     @FXML
@@ -189,6 +190,16 @@ public class CRSEditor extends AnchorPane implements Initializable {
                 throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
             }
         });
+//        meridianLongitude.textProperty().bind(Bindings
+//                .when(primeMeridian.getSelectionModel().selectedItemProperty().isNotNull())
+//                .then(primeMeridian.valueProperty().get().getGreenwichLongitude() + "")
+//                .otherwise(""));
+        primeMeridian.valueProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                String longitude = AngleFormat.getInstance().format(newValue.getGreenwichLongitude());
+                meridianLongitude.setText(longitude);
+            }
+        });
         axisNameColumn.setCellValueFactory((param) -> {
             return new SimpleObjectProperty<>(Objects.toString(param.getValue().getName().getCode(), ""));
         });
@@ -213,7 +224,7 @@ public class CRSEditor extends AnchorPane implements Initializable {
 
     private void setValues(CoordinateReferenceSystem crs) {
         this.crs = crs;
-        crsName.setText(Objects.toString(crs.getName(), ""));
+        crsName.setValue(Objects.toString(crs.getName(), ""));
         if (crs instanceof GeographicCRS) {
             GeographicCRS gcrs = (GeographicCRS) crs;
             GeodeticDatum datum = gcrs.getDatum();

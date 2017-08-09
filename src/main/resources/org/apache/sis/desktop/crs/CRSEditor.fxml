@@ -14,16 +14,14 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.RowConstraints?>
-<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.shape.Line?>
-<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
 
-<fx:root prefHeight="576.0" prefWidth="547.0" styleClass="summary" stylesheets="@../app.css" type="AnchorPane" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1">
+<fx:root styleClass="summary" stylesheets="@../app.css" type="AnchorPane" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1">
     <children>
-        <ScrollPane fitToWidth="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <ScrollPane fitToWidth="true" prefHeight="414.0" prefWidth="537.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <content>
-                <GridPane fx:id="grid" alignment="TOP_CENTER" hgap="5.0" prefHeight="451.0" prefWidth="545.0" vgap="10.0">
+                <GridPane fx:id="grid" alignment="TOP_CENTER" hgap="5.0" vgap="10.0">
                     <columnConstraints>
                         <ColumnConstraints halignment="RIGHT" hgrow="NEVER" minWidth="-Infinity" />
                         <ColumnConstraints halignment="LEFT" hgrow="ALWAYS" maxWidth="1.7976931348623157E308" minWidth="200.0" />
@@ -34,20 +32,23 @@
                         <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="SOMETIMES" />
                         <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="SOMETIMES" />
                         <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="1.7976931348623157E308" minHeight="-Infinity" valignment="TOP" vgrow="SOMETIMES" />
                         <RowConstraints maxHeight="1.7976931348623157E308" minHeight="-Infinity" vgrow="SOMETIMES" />
-                        <RowConstraints maxHeight="1.7976931348623157E308" minHeight="-Infinity" vgrow="SOMETIMES" />
-                        <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="SOMETIMES" />
                     </rowConstraints>
                     <children>
                         <Label styleClass="key" text="Name " />
+                  <ComboBox fx:id="crsName" editable="true" maxWidth="1.7976931348623157E308" promptText="Choose CRS or Custom" GridPane.columnIndex="1" />
                         <Label styleClass="key" text="Datum" GridPane.rowIndex="1" />
-                        <Label styleClass="key" GridPane.rowIndex="7" />
                         <Label styleClass="key" text="Prime Meridian" wrapText="true" GridPane.rowIndex="2" />
                         <Label styleClass="key" text="Axis Length" GridPane.rowIndex="3" GridPane.valignment="CENTER" />
                         <Label styleClass="key" text="Axes" GridPane.rowIndex="5" />
-                        <TextField fx:id="crsName" minWidth="200.0" promptText="CRS Name" GridPane.columnIndex="1" />
                         <TextField fx:id="datumName" minWidth="200.0" promptText="Datum name" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                        <ComboBox fx:id="primeMeridian" maxWidth="1.7976931348623157E308" minWidth="200.0" promptText="Not Available" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                  <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                     <children>
+                              <ComboBox fx:id="primeMeridian" maxWidth="1.7976931348623157E308" minWidth="200.0" promptText="Not Available" HBox.hgrow="ALWAYS" />
+                        <Text fx:id="meridianLongitude" strokeType="OUTSIDE" strokeWidth="0.0" text="Longitude" />
+                     </children>
+                  </HBox>
                         <VBox spacing="4.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
                             <children>
                                 <Spinner fx:id="semiMajor" editable="true" maxWidth="1.7976931348623157E308" minWidth="200.0" styleClass="arrows-on-left-vertical"> 
@@ -76,44 +77,7 @@
                                 <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
                             </columnResizePolicy>
                         </TableView>
-                        <TextArea fx:id="areaDescription" minWidth="200.0" prefRowCount="2" prefWidth="200.0" promptText="Description for Bounding Box" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="6" />
-                        <VBox alignment="CENTER" maxWidth="-Infinity" visible="false" GridPane.columnIndex="1" GridPane.rowIndex="7">
-                            <children>
-                                <Label fx:id="northBound" text="90° N">
-                                    <font>
-                                        <Font size="17.0" />
-                                    </font>
-                                </Label>
-                                <HBox alignment="CENTER">
-                                    <children>
-                                        <Label fx:id="westBound" text="-180° W">
-                                            <font>
-                                                <Font size="17.0" />
-                                            </font>
-                                        </Label>
-                                        <StackPane>
-                                            <children>
-                                                <Line endX="30.0" strokeWidth="2.0" />
-                                                <Line endY="30.0" strokeWidth="2.0" />
-                                            </children>
-                                            <padding>
-                                                <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
-                                            </padding>
-                                        </StackPane>
-                                        <Label fx:id="eastBound" text="180° E">
-                                            <font>
-                                                <Font size="17.0" />
-                                            </font>
-                                        </Label>
-                                    </children>
-                                </HBox>
-                                <Label fx:id="southBound" text="-90° S">
-                                    <font>
-                                        <Font size="17.0" />
-                                    </font>
-                                </Label>
-                            </children>
-                        </VBox>
+                        <TextArea fx:id="areaDescription" maxHeight="1.7976931348623157E308" minWidth="200.0" prefRowCount="2" promptText="Description for Bounding Box" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="6" />
                         <Label styleClass="key" text="Coordinate System Type" GridPane.rowIndex="4" />
                         <Label styleClass="key" text="Domain of Validity" GridPane.rowIndex="6" />
                           <Label styleClass="header" text="Semi Major" GridPane.rowIndex="3" GridPane.valignment="TOP" />
