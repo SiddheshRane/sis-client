@@ -26,6 +26,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import org.apache.sis.setup.About;
@@ -94,9 +95,10 @@ public class AppController implements Initializable {
             }
         });
         
-        Stage aboutWindow = new Stage(StageStyle.UTILITY);
+        Stage aboutWindow = new Stage(StageStyle.DECORATED);
         aboutWindow.setTitle("About");
         aboutWindow.setScene(new Scene(sisabout));
+        aboutWindow.initModality(Modality.APPLICATION_MODAL);
         aboutWindow.show();
     }
 
@@ -138,6 +140,14 @@ public class AppController implements Initializable {
         tabPane.getTabs().add(tab);
     }
 
+    public void openFeatureEditorTab(File file){
+        Tab tab = new Tab(file.getName()+" features");
+        tab.setClosable(true);
+        FeatureEditor vectorEditor = new FeatureEditor(file);
+        tab.setContent(vectorEditor);
+        tabPane.getTabs().add(tab);
+    }
+    
     private void loadPreferences() {
     }
     /**
@@ -152,6 +162,7 @@ public class AppController implements Initializable {
         icon.getStyleClass().add("icon");
         Text filename = new Text(file.getName());
         filename.getStyleClass().add("filename");
+        filename.setWrappingWidth(100);
         String mime = "N/A";
         try {
             mime = DataStores.probeContentType(file);
@@ -172,7 +183,7 @@ public class AppController implements Initializable {
             openMetadataTab(file);
         });
         MenuItem openFeatures = new MenuItem("check for features");
-        openFeatures.setOnAction(ae-> VectorEditor.loadFile(file));
+        openFeatures.setOnAction(ae-> openFeatureEditorTab(file));
         ContextMenu cm = new ContextMenu(openMeta, openFeatures);
 
         vBox.setOnContextMenuRequested(cme -> {

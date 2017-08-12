@@ -31,11 +31,6 @@
                         <fx:include source="crs/crs.fxml" />
                      </content>
                   </Tab>
-                  <Tab text="Feature Editor">
-                     <content>
-                        <fx:include source="FeatureEditor.fxml" />
-                     </content>
-                  </Tab>
                </tabs>
             </TabPane>
          </center>

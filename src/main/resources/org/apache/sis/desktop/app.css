@@ -11,10 +11,6 @@
     visibility: hidden;
 }
 
-.eye, .hand {
-    visibility: hidden;
-}
-
 .tree-table-row-cell:selected{
     -fx-background-color:#000000aa;
 }
@@ -46,3 +42,8 @@
     -fx-border-color: #387892;
     -fx-border-width: 2px;
 }*/
+
+.combo-box .combo-box-popup .list-view .list-cell {
+    -fx-wrap-text:true;
+    -fx-cell-size: -1;
+}

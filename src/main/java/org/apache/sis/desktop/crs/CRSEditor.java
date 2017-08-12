@@ -11,6 +11,10 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.ObjectBinding;
+import javafx.beans.binding.StringBinding;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -48,6 +52,7 @@ import org.opengis.util.FactoryException;
 import org.opengis.util.InternationalString;
 import org.apache.sis.desktop.metadata.GeographicExtentBox;
 import org.apache.sis.measure.AngleFormat;
+import org.controlsfx.control.textfield.TextFields;
 import org.opengis.referencing.crs.GeographicCRS;
 import org.opengis.referencing.datum.GeodeticDatum;
 
@@ -70,6 +75,17 @@ public class CRSEditor extends AnchorPane implements Initializable {
         @Override
         public AxisDirection fromString(String string) {
             return AxisDirection.valueOf(string);
+        }
+    };
+    public static final StringConverter<CoordinateSystem> CS_STRING_CONVERTER = new StringConverter<CoordinateSystem>() {
+        @Override
+        public String toString(CoordinateSystem cs) {
+            return cs.getName().getCode();
+        }
+
+        @Override
+        public CoordinateSystem fromString(String string) {
+            throw new UnsupportedOperationException();
         }
     };
 
@@ -224,12 +240,7 @@ public class CRSEditor extends AnchorPane implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         crsName.getItems().setAll(CRS_CODES.stream().map(Code::toString).collect(Collectors.toList()));
-        crsName.getSelectionModel().selectedIndexProperty().addListener((observable, oldValue, newValue) -> {
-            System.out.println("newValue = " + newValue + " " + crsName.getValue());
-        });
-        crsName.valueProperty().addListener((observable, oldValue, newValue) -> {
-            System.out.println("newValue = " + newValue + " item=" + crsName.getSelectionModel().getSelectedItem() + " empty=" + crsName.getSelectionModel().getSelectedIndex());
-        });
+        TextFields.bindAutoCompletion(crsName.getEditor(), crsName.getItems()).prefWidthProperty().bind(crsName.widthProperty());
         semiMajor.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(0, Double.MAX_VALUE));
         semiMinor.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(0, Double.MAX_VALUE));
         primeMeridian.getItems().setAll(PRIME_MERIDIANS);
@@ -244,24 +255,13 @@ public class CRSEditor extends AnchorPane implements Initializable {
                 throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
             }
         });
-        primeMeridian.valueProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue != null) {
-                String longitude = AngleFormat.getInstance().format(newValue.getGreenwichLongitude());
-                meridianLongitude.setText(longitude);
-            }
-        });
+        ObjectProperty<PrimeMeridian> pm = primeMeridian.valueProperty();
+        ObjectBinding<PrimeMeridian> pmOr0 = Bindings.when(pm.isNotNull()).then(pm).otherwise(PRIME_MERIDIANS.get(0));
+        StringBinding pmDegrees = Bindings.createStringBinding(() -> AngleFormat.getInstance().format(pmOr0.get().getGreenwichLongitude()), pm);
+        meridianLongitude.textProperty().bind(pmDegrees);
+        TextFields.bindAutoCompletion(coordSystemType.getEditor(), p -> COORDINATE_SYSTEMS, CS_STRING_CONVERTER).prefWidthProperty().bind(coordSystemType.widthProperty());
         coordSystemType.getItems().setAll(COORDINATE_SYSTEMS);
-        coordSystemType.setConverter(new StringConverter<CoordinateSystem>() {
-            @Override
-            public String toString(CoordinateSystem cs) {
-                return cs.getName().getCode();
-            }
-
-            @Override
-            public CoordinateSystem fromString(String string) {
-                throw new UnsupportedOperationException();
-            }
-        });
+        coordSystemType.setConverter(CS_STRING_CONVERTER);
         axisNameColumn.setCellValueFactory((param) -> {
             return new SimpleObjectProperty<>(Objects.toString(param.getValue().getName().getCode(), ""));
         });

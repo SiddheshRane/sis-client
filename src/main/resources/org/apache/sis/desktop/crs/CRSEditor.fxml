@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
@@ -38,7 +37,7 @@
                     </rowConstraints>
                     <children>
                         <Label styleClass="key" text="Name " />
-                  <ComboBox fx:id="crsName" editable="true" maxWidth="1.7976931348623157E308" promptText="Choose CRS or Custom" GridPane.columnIndex="1" />
+                  <ComboBox fx:id="crsName" editable="true" maxWidth="1.7976931348623157E308" promptText="Search" GridPane.columnIndex="1" />
                         <Label styleClass="key" text="Datum" GridPane.rowIndex="1" />
                         <Label styleClass="key" text="Prime Meridian" wrapText="true" GridPane.rowIndex="2" />
                         <Label styleClass="key" text="Axis Length" GridPane.rowIndex="3" GridPane.valignment="CENTER" />
@@ -67,7 +66,7 @@
                                 </Spinner>
                             </children>
                         </VBox>
-                        <ComboBox fx:id="coordSystemType" maxWidth="1.7976931348623157E308" minWidth="200.0" promptText="Ellipsoidal" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                        <ComboBox fx:id="coordSystemType" editable="true" maxWidth="1.7976931348623157E308" minWidth="200.0" promptText="Search" GridPane.columnIndex="1" GridPane.rowIndex="4" />
                         <TableView fx:id="axesTable" editable="true" minWidth="200.0" prefHeight="125.0" prefWidth="347.0" GridPane.columnIndex="1" GridPane.rowIndex="5">
                             <columns>
                                 <TableColumn fx:id="axisNameColumn" prefWidth="75.0" text="Name" />

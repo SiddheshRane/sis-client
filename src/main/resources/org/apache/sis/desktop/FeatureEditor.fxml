@@ -1,133 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
-<?import javafx.scene.control.TableColumn?>
-<?import javafx.scene.control.TableView?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-
-<TabPane tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1">
-   <tabs>
-      <Tab text="Waypoints">
-         <content>
-            <VBox prefHeight="547.0" prefWidth="600.0" styleClass="summary" stylesheets="@app.css">
-               <children>
-                  <TableView maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" tableMenuButtonVisible="true" VBox.vgrow="ALWAYS">
-                    <columns>
-                      <TableColumn prefWidth="75.0" text="Name" />
-                      <TableColumn prefWidth="75.0" text="Latitude" />
-                        <TableColumn prefWidth="91.0" text="Longitude" />
-                        <TableColumn prefWidth="91.0" text="Elevation" />
-                        <TableColumn prefWidth="91.0" text="Time" />
-                        <TableColumn prefWidth="91.0" text="Description" />
-                    </columns>
-                  </TableView>
-               </children>
-               <padding>
-                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-               </padding>
-            </VBox>
-         </content>
-      </Tab>
-      <Tab text="Routes">
-         <content>
-            <ScrollPane fitToWidth="true">
-               <content>
-                  <VBox prefHeight="547.0" prefWidth="600.0" spacing="5.0" styleClass="summary" stylesheets="@app.css">
-                     <children>
-                        <HBox alignment="CENTER_LEFT" spacing="5.0">
-                           <children>
-                              <Label styleClass="key" text="Name" />
-                              <TextField promptText="Route Name" HBox.hgrow="ALWAYS" />
-                           </children>
-                        </HBox>
-                        <TableView tableMenuButtonVisible="true" VBox.vgrow="ALWAYS">
-                           <columns>
-                              <TableColumn prefWidth="75.0" text="Name" />
-                              <TableColumn prefWidth="75.0" text="Latitude" />
-                              <TableColumn prefWidth="91.0" text="Longitude" />
-                              <TableColumn prefWidth="91.0" text="Elevation" />
-                              <TableColumn prefWidth="91.0" text="Time" />
-                              <TableColumn prefWidth="91.0" text="Description" />
-                           </columns>
-                        </TableView>
-                        <HBox alignment="CENTER_LEFT" layoutX="15.0" layoutY="15.0" spacing="5.0">
-                           <children>
-                              <Label styleClass="key" text="Name" />
-                              <TextField promptText="Route Name" HBox.hgrow="ALWAYS" />
-                           </children>
-                        </HBox>
-                        <TableView layoutX="15.0" layoutY="46.0" tableMenuButtonVisible="true">
-                           <columns>
-                              <TableColumn prefWidth="75.0" text="Name" />
-                              <TableColumn prefWidth="75.0" text="Latitude" />
-                              <TableColumn prefWidth="91.0" text="Longitude" />
-                              <TableColumn prefWidth="91.0" text="Elevation" />
-                              <TableColumn prefWidth="91.0" text="Time" />
-                              <TableColumn prefWidth="91.0" text="Description" />
-                           </columns>
-                        </TableView>
-                     </children>
-                     <padding>
+<fx:root tabClosingPolicy="UNAVAILABLE" type="TabPane" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1">
+    <tabs>
+        <Tab text="Waypoints">
+            <content>
+                <VBox prefHeight="547.0" prefWidth="600.0" styleClass="summary" stylesheets="@app.css">
+                    <padding>
                         <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                     </padding>
-                  </VBox>
-               </content>
-            </ScrollPane>
-         </content>
-      </Tab>
-      <Tab text="Tracks">
-         <content>
-            <ScrollPane fitToWidth="true">
-               <content>
-                  <VBox prefHeight="547.0" prefWidth="600.0" spacing="5.0" styleClass="summary" stylesheets="@app.css">
-                     <children>
-                        <HBox alignment="CENTER_LEFT" spacing="5.0">
-                           <children>
-                              <Label styleClass="key" text="Name" />
-                              <TextField promptText="Track Name" HBox.hgrow="ALWAYS" />
-                           </children>
-                        </HBox>
-                        <TableView tableMenuButtonVisible="true" VBox.vgrow="ALWAYS">
-                           <columns>
-                              <TableColumn prefWidth="75.0" text="Name" />
-                              <TableColumn prefWidth="75.0" text="Latitude" />
-                              <TableColumn prefWidth="91.0" text="Longitude" />
-                              <TableColumn prefWidth="91.0" text="Elevation" />
-                              <TableColumn prefWidth="91.0" text="Time" />
-                              <TableColumn prefWidth="91.0" text="Description" />
-                           </columns>
-                        </TableView>
-                        <HBox alignment="CENTER_LEFT" layoutX="15.0" layoutY="15.0" spacing="5.0">
-                           <children>
-                              <Label styleClass="key" text="Name" />
-                              <TextField promptText="Track Name" HBox.hgrow="ALWAYS" />
-                           </children>
-                        </HBox>
-                        <TableView layoutX="15.0" layoutY="46.0" tableMenuButtonVisible="true">
-                           <columns>
-                              <TableColumn prefWidth="75.0" text="Name" />
-                              <TableColumn prefWidth="75.0" text="Latitude" />
-                              <TableColumn prefWidth="91.0" text="Longitude" />
-                              <TableColumn prefWidth="91.0" text="Elevation" />
-                              <TableColumn prefWidth="91.0" text="Time" />
-                              <TableColumn prefWidth="91.0" text="Description" />
-                           </columns>
-                        </TableView>
-                     </children>
-                     <padding>
-                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                     </padding>
-                  </VBox>
-               </content>
-            </ScrollPane>
-         </content>
-      </Tab>
-   </tabs>
-</TabPane>
+                    </padding>
+                    <children>
+                        <fx:include fx:id="waypoints" source="WaypointTable.fxml" />
+                    </children>
+                </VBox>
+            </content>
+        </Tab>
+        <Tab text="Routes">
+            <content>
+                <ScrollPane fitToWidth="true">
+                    <content>
+                        <VBox prefHeight="547.0" prefWidth="600.0" spacing="5.0" styleClass="summary" stylesheets="@app.css">
+                            <padding>
+                                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                            </padding>
+                        </VBox>
+                    </content>
+                </ScrollPane>
+            </content>
+        </Tab>
+        <Tab text="Tracks">
+            <content>
+                <ScrollPane fitToWidth="true" />
+            </content>
+        </Tab>
+    </tabs>
+</fx:root>
