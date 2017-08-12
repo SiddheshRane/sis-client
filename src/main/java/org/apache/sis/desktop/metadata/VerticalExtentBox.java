@@ -5,6 +5,8 @@ import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXML;
@@ -12,6 +14,9 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Spinner;
 import javafx.scene.layout.HBox;
+import org.apache.sis.metadata.iso.extent.DefaultGeographicBoundingBox;
+import org.apache.sis.metadata.iso.extent.DefaultVerticalExtent;
+import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.metadata.extent.VerticalExtent;
 
 /**
@@ -40,6 +45,27 @@ public class VerticalExtentBox extends HBox implements Initializable {
         return valueProperty().get();
     }
 
+    final InvalidationListener invalidationListener = new InvalidationListener() {
+        boolean changeIsLocal;
+
+        @Override
+        public void invalidated(Observable observable) {
+            if (changeIsLocal) {
+                return;
+            }
+            changeIsLocal = true;
+            if (observable == extent) {
+                VerticalExtent newValue = extent.get();
+                min.getValueFactory().setValue(newValue.getMinimumValue());
+                max.getValueFactory().setValue(newValue.getMaximumValue());
+            } else {
+                DefaultVerticalExtent newExtent = new DefaultVerticalExtent(min.getValue(), max.getValue(), extent.get().getVerticalCRS());
+                extent.setValue(newExtent);
+            }
+            changeIsLocal = false;
+        }
+    };
+
     public VerticalExtentBox(VerticalExtent extent) {
         FXMLLoader loader = new FXMLLoader(GeographicExtentBox.class.getResource("VerticalExtent.fxml"));
         loader.setRoot(this);
@@ -54,10 +80,9 @@ public class VerticalExtentBox extends HBox implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        valueProperty().addListener((observable, oldValue, newValue) -> {
-            min.getValueFactory().setValue(newValue.getMinimumValue());
-            max.getValueFactory().setValue(newValue.getMaximumValue());
-        });
+        valueProperty().addListener(invalidationListener);
+        min.getValueFactory().valueProperty().addListener(invalidationListener);
+        max.getValueFactory().valueProperty().addListener(invalidationListener);
     }
 
 }

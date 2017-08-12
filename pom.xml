@@ -134,6 +134,12 @@
             <artifactId>easybind</artifactId>
             <version>1.0.3</version>
         </dependency>
+        <dependency>
+            <groupId>com.esri.geometry</groupId>
+            <artifactId>esri-geometry-api</artifactId>
+            <version>1.2.1</version>
+            <type>jar</type>
+        </dependency>
     </dependencies>
     <description>A JavaFX desktop app for editing Metadata, CRS and coordinate transformations</description>
 </project>
