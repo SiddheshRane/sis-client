@@ -13,18 +13,19 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
-import java.util.stream.Collectors;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Insets;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
@@ -46,6 +47,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextFlow;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import org.apache.sis.desktop.crs.CRSEditor;
 import org.apache.sis.metadata.MetadataStandard;
 import org.apache.sis.metadata.ValueExistencePolicy;
 import org.apache.sis.storage.DataStore;
@@ -73,6 +77,8 @@ import org.apache.sis.desktop.metadata.GeographicExtentBox;
 import org.apache.sis.desktop.metadata.IdentifierBox;
 import org.apache.sis.desktop.metadata.SummaryView;
 import org.apache.sis.desktop.metadata.VerticalExtentBox;
+import org.opengis.referencing.ReferenceSystem;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /**
  *
@@ -370,7 +376,6 @@ public class MetadataView extends VBox {
         }
     }
 
-
     /**
      * A property containing predicate that returns true if the given
      * {@link TreeTable.Node} must be shown as a {@link TreeItem} in the
@@ -568,9 +573,6 @@ public class MetadataView extends VBox {
                 CitationDate d = (CitationDate) item;
                 LocalDate date = d.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
                 DatePicker datePicker = new DatePicker(date);
-
-                //TODO: Refactor all widgets into separate classes
-                //TODO: Transfer styling info like spacing to css files
                 ControlledVocabulary vocab = d.getDateType();
                 ControlledVocabularyBox comboBox = new ControlledVocabularyBox(vocab);
                 HBox hBox = new HBox(datePicker, comboBox);
@@ -632,6 +634,22 @@ public class MetadataView extends VBox {
                 ControlledVocabularyBox type = new ControlledVocabularyBox(keywords.getType());
                 HBox hBox = new HBox(flow, type);
                 setGraphic(hBox);
+            } else if (item instanceof ReferenceSystem) {
+                ReferenceSystem ref = (ReferenceSystem) item;
+                if (ref instanceof CoordinateReferenceSystem) {
+                    Hyperlink edit = new Hyperlink("Edit CRS");
+                    edit.setOnAction(ae -> {
+                        CRSEditor crsEditor = new CRSEditor((CoordinateReferenceSystem) ref);
+                        Stage stage = new Stage();
+                        stage.setTitle("Edit CRS");
+                        stage.initModality(Modality.WINDOW_MODAL);
+                        stage.initOwner(getScene().getWindow());
+                        stage.setScene(new Scene(crsEditor));
+                        stage.show();
+                    });
+                    setGraphic(edit);
+                }
+                setText(Objects.toString(ref.getName(), ""));
             } else {
                 setGraphic(null);
                 if (value == null) {

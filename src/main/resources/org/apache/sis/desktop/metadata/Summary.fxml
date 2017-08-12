@@ -25,7 +25,7 @@
           <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="SOMETIMES" />
             <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="SOMETIMES" />
             <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="SOMETIMES" />
-            <RowConstraints vgrow="SOMETIMES" />
+            <RowConstraints valignment="TOP" vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
             <Label styleClass="key" text="Title " />
@@ -78,7 +78,7 @@
                </children>
             </VBox>
             <Label fx:id="spatialRepresentationTypeText" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-            <GridPane fx:id="axisDimensionsGrid" alignment="CENTER_LEFT" hgap="5.0" vgap="5.0" GridPane.columnIndex="1" GridPane.rowIndex="5">
+            <GridPane fx:id="axisDimensionsGrid" hgap="5.0" vgap="5.0" GridPane.columnIndex="1" GridPane.rowIndex="5">
               <columnConstraints>
                 <ColumnConstraints />
                 <ColumnConstraints hgrow="SOMETIMES" />
@@ -87,8 +87,8 @@
                 <RowConstraints maxHeight="-Infinity" vgrow="SOMETIMES" />
               </rowConstraints>
                <children>
-                  <Label styleClass="header" text="Name" />
-                  <Label styleClass="header" text="Size" GridPane.columnIndex="1" />
+                  <Label styleClass="key" text="Name" />
+                  <Label styleClass="key" text="Size" GridPane.columnIndex="1" />
                </children>
             </GridPane>
          </children>
