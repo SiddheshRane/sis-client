@@ -6,7 +6,6 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -16,7 +15,6 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TableView;
@@ -51,12 +49,7 @@ public class FeatureEditor extends TabPane implements Initializable {
                     return;
                 }
                 FeatureStore store = (FeatureStore) datastore;
-                Stream<Feature> features = store.features();
-                List<Feature> list = features.filter((t) -> {
-                    return t.getType().getName().toString().contains("WayPoint");
-                }).collect(Collectors.toList());
-                System.out.println("list = " + list);
-                Platform.runLater(() -> waypointsController.getWaypoints().setAll(list));
+                loadFeatures(store);
             } catch (DataStoreException ex) {
                 System.out.println("ex = " + ex);
                 Logger.getLogger(FeatureEditor.class.getName()).log(Level.SEVERE, null, ex);
@@ -65,6 +58,15 @@ public class FeatureEditor extends TabPane implements Initializable {
         Thread thread = new Thread(featureLoader);
         thread.setDaemon(true);
         thread.start();
+    }
+
+    private void loadFeatures(FeatureStore store) throws DataStoreException {
+        Stream<Feature> features = store.features();
+        List<Feature> list = features.filter((t) -> {
+            return t.getType().getName().toString().contains("WayPoint");
+        }).collect(Collectors.toList());
+        System.out.println("list = " + list);
+        Platform.runLater(() -> waypointsController.getWaypoints().setAll(list));
     }
 
     public FeatureEditor(FeatureStore store) {

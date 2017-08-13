@@ -66,6 +66,17 @@ public class CRSEditor extends AnchorPane implements Initializable {
     private static final List<Code> CRS_CODES = new ArrayList();
     private static final List<CoordinateSystem> COORDINATE_SYSTEMS = new ArrayList<>();
     private static final List<PrimeMeridian> PRIME_MERIDIANS = new ArrayList();
+    public static final StringConverter<PrimeMeridian> PRIME_MERIDIAN_STRING_CONVERTER = new StringConverter<PrimeMeridian>() {
+        @Override
+        public String toString(PrimeMeridian object) {
+            return object.getName().getCode();
+        }
+
+        @Override
+        public PrimeMeridian fromString(String string) {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+    };
     public static final StringConverter<AxisDirection> AXIS_DIRECTION_STRING_CONVERTER = new StringConverter<AxisDirection>() {
         @Override
         public String toString(AxisDirection axis) {
@@ -241,27 +252,21 @@ public class CRSEditor extends AnchorPane implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         crsName.getItems().setAll(CRS_CODES.stream().map(Code::toString).collect(Collectors.toList()));
         TextFields.bindAutoCompletion(crsName.getEditor(), crsName.getItems()).prefWidthProperty().bind(crsName.widthProperty());
+        
         semiMajor.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(0, Double.MAX_VALUE));
         semiMinor.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(0, Double.MAX_VALUE));
+        
         primeMeridian.getItems().setAll(PRIME_MERIDIANS);
-        primeMeridian.setConverter(new StringConverter<PrimeMeridian>() {
-            @Override
-            public String toString(PrimeMeridian object) {
-                return object.getName().getCode();
-            }
-
-            @Override
-            public PrimeMeridian fromString(String string) {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
-        });
+        primeMeridian.setConverter(PRIME_MERIDIAN_STRING_CONVERTER);
         ObjectProperty<PrimeMeridian> pm = primeMeridian.valueProperty();
         ObjectBinding<PrimeMeridian> pmOr0 = Bindings.when(pm.isNotNull()).then(pm).otherwise(PRIME_MERIDIANS.get(0));
         StringBinding pmDegrees = Bindings.createStringBinding(() -> AngleFormat.getInstance().format(pmOr0.get().getGreenwichLongitude()), pm);
         meridianLongitude.textProperty().bind(pmDegrees);
-        TextFields.bindAutoCompletion(coordSystemType.getEditor(), p -> COORDINATE_SYSTEMS, CS_STRING_CONVERTER).prefWidthProperty().bind(coordSystemType.widthProperty());
+        
         coordSystemType.getItems().setAll(COORDINATE_SYSTEMS);
         coordSystemType.setConverter(CS_STRING_CONVERTER);
+        TextFields.bindAutoCompletion(coordSystemType.getEditor(), p -> COORDINATE_SYSTEMS, CS_STRING_CONVERTER).prefWidthProperty().bind(coordSystemType.widthProperty());
+        
         axisNameColumn.setCellValueFactory((param) -> {
             return new SimpleObjectProperty<>(Objects.toString(param.getValue().getName().getCode(), ""));
         });

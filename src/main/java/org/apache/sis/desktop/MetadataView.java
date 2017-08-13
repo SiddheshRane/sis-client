@@ -86,12 +86,8 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
  */
 public class MetadataView extends VBox {
 
-    public static final Predicate<TreeTable.Node> NON_EMPTY_LEAF = (t) -> {
-        return !t.isLeaf() || t.getValue(VALUE) != null;
-    };
-    public static final Predicate<TreeTable.Node> EXPAND_SINGLE_CHILD = node -> {
-        return node.getChildren().size() == 1 || node.getParent() == null;
-    };
+    public static final Predicate<TreeTable.Node> NON_EMPTY_LEAF = t -> !t.isLeaf() || t.getValue(VALUE) != null;
+    public static final Predicate<TreeTable.Node> EXPAND_SINGLE_CHILD = node -> node.getChildren().size() == 1 || node.getParent() == null;
 
     public static final String getIdentifierElseName(TreeTable.Node node) {
         String name = node.getValue(NAME).toString();
@@ -105,7 +101,6 @@ public class MetadataView extends VBox {
     TreeTableView<TreeTable.Node> treeTableView = new TreeTableView<>();
     private Button configSave;
     private ComboBox<String> prefBox;
-    private ToggleButton showEmptyFields;
     private HBox controlsBox;
 
     private ContextMenu contextMenu;
@@ -150,29 +145,22 @@ public class MetadataView extends VBox {
         }
     };
 
-    private final Set<String> shownNodes = new HashSet<>();
-    private Predicate<TreeTable.Node> showNode = (t) -> {
-        return shownNodes.contains(getIdentifierElseName(t));
-    };
-    private ObjectProperty<Predicate<TreeTable.Node>> showNodeProperty = new SimpleObjectProperty<>(NON_EMPTY_LEAF.and(notCoveredByCustomWidget));
+    private final Set<String> nodesWithTreeItems = new HashSet<>();
+    private Predicate<TreeTable.Node> createTreeItemForNode = t -> nodesWithTreeItems.contains(getIdentifierElseName(t));
+    private ObjectProperty<Predicate<TreeTable.Node>> createTreeItemForNodeProperty = new SimpleObjectProperty<>(NON_EMPTY_LEAF.and(notCoveredByCustomWidget));
 
     private Map<String, Integer> userSortTable = new HashMap<>();
-    Comparator<TreeTable.Node> userSortOrder = Comparator.comparingInt((node) -> {
-        String key = getIdentifierElseName(node);
-        return userSortTable.getOrDefault(key, Integer.MAX_VALUE);
-    });
+    Comparator<TreeTable.Node> userSortOrder = Comparator.comparingInt(node -> userSortTable.getOrDefault(getIdentifierElseName(node), Integer.MAX_VALUE));
     private ObjectProperty<Comparator<TreeTable.Node>> comparator = new SimpleObjectProperty<>(userSortOrder);
+
     private final Set<String> expandSet = new HashSet<>();
-    private SimpleObjectProperty<Predicate<TreeTable.Node>> expandNodeProperty;
+    private SimpleObjectProperty<Predicate<TreeTable.Node>> expandNodeProperty = new SimpleObjectProperty<>(EXPAND_SINGLE_CHILD);
 
     public MetadataView(TreeTable metadata) {
         this.metadata = metadata;
+        expandNodeProperty.addListener(ob -> expandNodes(treeTableView.getRoot()));
+        
         rootprefs = Preferences.userNodeForPackage(MetadataView.class);
-        expandNodeProperty = new SimpleObjectProperty<>(EXPAND_SINGLE_CHILD);
-        expandNodeProperty.addListener((observable, oldValue, newValue) -> {
-            expandNodes(treeTableView.getRoot());
-        });
-
         prefBox = new ComboBox<>();
         prefBox.setEditable(true);
         configSave = new Button("Save Config");
@@ -219,7 +207,6 @@ public class MetadataView extends VBox {
                                                   treeTableView.getFocusModel().focusNext();
                                                   break;
                                           }
-//                                             int itemIndex = treeTableView.getSelectionModel().getSelectedIndex();
                                           ke.consume();
                                       });
         MenuItem flatten = new MenuItem("Flatten sub tree");
@@ -354,7 +341,7 @@ public class MetadataView extends VBox {
     }
 
     private void updateRoot(TreeTable treeTable) {
-        TreeItem<TreeTable.Node> rootItem = new TreeItem<TreeTable.Node>(treeTable.getRoot());
+        TreeItem<TreeTable.Node> rootItem = new TreeItem<>(treeTable.getRoot());
         createTreeItems(rootItem, treeTable.getRoot().getChildren());
         rootItem.setExpanded(true);
         treeTableView.setRoot(rootItem);
@@ -364,11 +351,10 @@ public class MetadataView extends VBox {
         for (TreeTable.Node node : children) {
             TreeItem parent = rootItem;
             //include this node in the tree table view?
-            if (getShowNode().test(node)) {
+            if (getCreateTreeItemForNode().test(node)) {
                 parent = new TreeItem(node);
-                rootItem.getChildren().add(parent);
-                //keep expanded?
                 parent.setExpanded(getExpandNode().test(node));
+                rootItem.getChildren().add(parent);
             }
             if (!node.isLeaf()) {
                 createTreeItems(parent, node.getChildren());
@@ -384,16 +370,16 @@ public class MetadataView extends VBox {
      *
      * @return The property containing the expansion predicate
      */
-    public ObjectProperty<Predicate<TreeTable.Node>> showNodeProperty() {
-        return showNodeProperty;
+    public ObjectProperty<Predicate<TreeTable.Node>> createTreeItemForNodeProperty() {
+        return createTreeItemForNodeProperty;
     }
 
-    public Predicate<TreeTable.Node> getShowNode() {
-        return showNodeProperty.get();
+    public Predicate<TreeTable.Node> getCreateTreeItemForNode() {
+        return createTreeItemForNodeProperty.get();
     }
 
-    public void setShowNode(Predicate<TreeTable.Node> showNode) {
-        showNodeProperty.set(showNode);
+    public void setCreateTreeItemForNode(Predicate<TreeTable.Node> createTreeItemForNode) {
+        createTreeItemForNodeProperty.set(createTreeItemForNode);
     }
 
     public ObjectProperty<Comparator<TreeTable.Node>> comparatorProperty() {
@@ -479,7 +465,7 @@ public class MetadataView extends VBox {
             }
             expandSet.clear();
             userSortTable.clear();
-            shownNodes.clear();
+            nodesWithTreeItems.clear();
             for (String key : keys) {
                 String value = currentConfig.get(key, "+ v 0");
                 String[] split = value.split(" ");
@@ -487,7 +473,7 @@ public class MetadataView extends VBox {
                     expandSet.add(key);
                 }
                 if ("v".equals(split[1])) {
-                    shownNodes.add(key);
+                    nodesWithTreeItems.add(key);
                 }
                 int sortPosn = Integer.parseInt(split[2]);
                 userSortTable.put(key, sortPosn);
@@ -529,7 +515,7 @@ public class MetadataView extends VBox {
 
     }
 
-    private static class MetadataCell extends TreeTableCell<TreeTable.Node, TreeTable.Node> {
+    public  static class MetadataCell extends TreeTableCell<TreeTable.Node, TreeTable.Node> {
 
         public MetadataCell() {
             setWrapText(true);

@@ -5,11 +5,11 @@
 
 <TableView fx:id="table" editable="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="407.0" prefWidth="596.0" tableMenuButtonVisible="true" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.apache.sis.desktop.WaypointTableController">
    <columns>
-      <TableColumn fx:id="name" prefWidth="85.0" text="Name" />
-      <TableColumn fx:id="latitude" prefWidth="78.0" text="Latitude" />
-      <TableColumn fx:id="longitude" prefWidth="88.0" text="Longitude" />
-      <TableColumn fx:id="elevation" prefWidth="92.0" text="Elevation" />
-      <TableColumn fx:id="time" text="Time" />
-      <TableColumn fx:id="description" prefWidth="91.0" text="Description" />
+      <TableColumn fx:id="name" minWidth="100.0" prefWidth="-1.0" text="Name" />
+      <TableColumn fx:id="latitude" minWidth="100.0" prefWidth="-1.0" text="Latitude" />
+      <TableColumn fx:id="longitude" minWidth="100.0" prefWidth="-1.0" text="Longitude" />
+      <TableColumn fx:id="elevation" minWidth="80.0" prefWidth="-1.0" text="Elevation" />
+      <TableColumn fx:id="time" minWidth="80.0" prefWidth="-1.0" text="Time" />
+      <TableColumn fx:id="description" minWidth="100.0" prefWidth="-1.0" text="Description" />
    </columns>
 </TableView>

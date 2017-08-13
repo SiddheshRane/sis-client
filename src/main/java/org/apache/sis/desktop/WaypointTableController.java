@@ -9,7 +9,6 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import org.opengis.feature.Feature;
 import com.esri.core.geometry.Point;
-import java.text.DecimalFormat;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -48,10 +47,9 @@ public class WaypointTableController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         table.setItems(waypoints);
-        name.setCellValueFactory((param) -> {
-            return new SimpleStringProperty(param.getValue().getPropertyValue("name").toString());
-        });
-        name.setCellFactory(a -> new TextFieldTableCell<>());
+        name.setCellValueFactory((param) -> new SimpleStringProperty(param.getValue().getPropertyValue("name").toString()));
+        description.setCellValueFactory((param) -> new SimpleStringProperty(param.getValue().getPropertyValue("description").toString()));
+        description.setCellFactory(a -> new TextFieldTableCell<>());
         latitude.setCellFactory(a -> new TextFieldTableCell<>(new FormatStringConverter(AngleFormat.getInstance())));
         latitude.setCellValueFactory((param) -> {
             Feature f = param.getValue();
