@@ -43,7 +43,6 @@ import org.apache.sis.desktop.dnd.DndController;
  */
 public class AppController implements Initializable {
 
-
     @FXML
     BorderPane borderPane;
 
@@ -53,7 +52,7 @@ public class AppController implements Initializable {
     private MenuItem openMenu;
     @FXML
     private MenuItem aboutMenu;
-    
+
     @FXML
     TabPane tabPane;
     @FXML
@@ -76,7 +75,7 @@ public class AppController implements Initializable {
     @FXML
     private void showAboutWindow() {
         final TreeTable configuration = About.configuration();
-        MetadataView sisabout = new MetadataView(configuration);
+        NodeTreeTable sisabout = new NodeTreeTable(configuration);
         sisabout.setExpandNode(new Predicate<TreeTable.Node>() {
             @Override
             public boolean test(TreeTable.Node node) {
@@ -94,7 +93,7 @@ public class AppController implements Initializable {
                 return false;
             }
         });
-        
+
         Stage aboutWindow = new Stage(StageStyle.DECORATED);
         aboutWindow.setTitle("About");
         aboutWindow.setScene(new Scene(sisabout));
@@ -140,16 +139,17 @@ public class AppController implements Initializable {
         tabPane.getTabs().add(tab);
     }
 
-    public void openFeatureEditorTab(File file){
-        Tab tab = new Tab(file.getName()+" features");
+    public void openFeatureEditorTab(File file) {
+        Tab tab = new Tab(file.getName() + " features");
         tab.setClosable(true);
         FeatureEditor vectorEditor = new FeatureEditor(file);
         tab.setContent(vectorEditor);
         tabPane.getTabs().add(tab);
     }
-    
+
     private void loadPreferences() {
     }
+
     /**
      * This function generates a graphical {@code Node} to represent
      * {@code file} in the drag and drop pane.
@@ -162,7 +162,7 @@ public class AppController implements Initializable {
         icon.getStyleClass().add("icon");
         Text filename = new Text(file.getName());
         filename.getStyleClass().add("filename");
-        filename.setWrappingWidth(100);
+//        filename.setWrappingWidth(200);
         String mime = "N/A";
         try {
             mime = DataStores.probeContentType(file);
@@ -179,16 +179,12 @@ public class AppController implements Initializable {
         VBox vBox = new VBox(icon, filename, type);
         vBox.getStyleClass().add("file-vbox");
         final MenuItem openMeta = new MenuItem("Open metadata");
-        openMeta.setOnAction(ae -> {
-            openMetadataTab(file);
-        });
+        openMeta.setOnAction(ae -> openMetadataTab(file));
         MenuItem openFeatures = new MenuItem("check for features");
-        openFeatures.setOnAction(ae-> openFeatureEditorTab(file));
+        openFeatures.setOnAction(ae -> openFeatureEditorTab(file));
         ContextMenu cm = new ContextMenu(openMeta, openFeatures);
 
-        vBox.setOnContextMenuRequested(cme -> {
-            cm.show(vBox, cme.getScreenX(), cme.getScreenY());
-        });
+        vBox.setOnContextMenuRequested(cme -> cm.show(vBox, cme.getScreenX(), cme.getScreenY()));
         return vBox;
     }
 
