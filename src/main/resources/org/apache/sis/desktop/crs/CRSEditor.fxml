@@ -78,7 +78,7 @@
                             </columnResizePolicy>
                         </TableView>
                         <TextArea fx:id="areaDescription" maxHeight="1.7976931348623157E308" minWidth="200.0" prefRowCount="2" promptText="Description for Bounding Box" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="6" />
-                        <Label styleClass="key" text="Coordinate System Type" GridPane.rowIndex="4" />
+                        <Label styleClass="key" text="Coordinate Systems" GridPane.rowIndex="4" />
                         <Label styleClass="key" text="Domain of Validity" GridPane.rowIndex="6" />
                           <Label styleClass="header" text="Semi Major" GridPane.rowIndex="3" GridPane.valignment="TOP" />
                           <Label styleClass="header" text="Semi Minor" GridPane.rowIndex="3" GridPane.valignment="BOTTOM" />
