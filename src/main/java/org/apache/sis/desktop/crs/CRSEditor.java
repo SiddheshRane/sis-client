@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.binding.StringBinding;
@@ -296,15 +297,11 @@ public class CRSEditor extends AnchorPane implements Initializable {
         crsName.valueProperty().addListener((observable, oldValue, newValue) -> {
             System.out.println("newValue = " + newValue);
         });
-        final AutoCompletionBinding<String> autoComplete = TextFields.bindAutoCompletion(crsName.getEditor(), CRS_CODE.keySet());
-        autoComplete.prefWidthProperty().bind(crsName.widthProperty());
-        autoComplete.setOnAutoCompleted(ace->{
-            System.out.println("completed {"+ace.getCompletion()+"}");
-        });
-        
+        TextFields.bindAutoCompletion(crsName.getEditor(), CRS_CODE.keySet().stream().map(en -> CRS_CODE_TO_DESCRIPTION_CONVERTER.toString(en)).collect(Collectors.toList())).prefWidthProperty().bind(crsName.widthProperty());
+
         semiMajor.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(0, Double.MAX_VALUE));
         semiMinor.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(0, Double.MAX_VALUE));
-        
+
         primeMeridian.getItems().setAll(PRIME_MERIDIANS);
         primeMeridian.setConverter(PRIME_MERIDIAN_STRING_CONVERTER);
         ObjectProperty<PrimeMeridian> pm = primeMeridian.valueProperty();
@@ -314,7 +311,7 @@ public class CRSEditor extends AnchorPane implements Initializable {
 
         coordSystemType.getItems().setAll(COORDINATE_SYSTEMS);
         coordSystemType.setConverter(CS_STRING_CONVERTER);
-        TextFields.bindAutoCompletion(coordSystemType.getEditor(), p -> COORDINATE_SYSTEMS, CS_STRING_CONVERTER).prefWidthProperty().bind(coordSystemType.widthProperty());
+        TextFields.bindAutoCompletion(coordSystemType.getEditor(), COORDINATE_SYSTEMS.stream().map(cs -> CS_STRING_CONVERTER.toString(cs)).collect(Collectors.toList())).prefWidthProperty().bind(coordSystemType.widthProperty());
 
         axisNameColumn.setCellValueFactory((param) -> {
             return new SimpleObjectProperty<>(Objects.toString(param.getValue().getName().getCode(), ""));
