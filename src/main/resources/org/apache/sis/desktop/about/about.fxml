@@ -15,7 +15,7 @@
    <children>
       <HBox alignment="CENTER_LEFT" pickOnBounds="false" spacing="10.0" styleClass="banner" stylesheets="@about.css">
          <padding>
-            <Insets left="5.0" right="5.0" />
+            <Insets left="10.0" right="8.0" />
          </padding>
          <children>
             <Label fx:id="title" contentDisplay="BOTTOM" styleClass="heading" text="Apache SIS">
@@ -30,7 +30,7 @@
             <StackPane HBox.hgrow="ALWAYS" />
             <ImageView cache="true" cacheHint="QUALITY" fitHeight="96.0" fitWidth="87.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true">
                <image>
-                  <Image url="@../../../../../sis-logo-128.png" />
+                  <Image url="@sis-logo-128.png" />
                </image>
                <HBox.margin>
                   <Insets bottom="5.0" top="5.0" />

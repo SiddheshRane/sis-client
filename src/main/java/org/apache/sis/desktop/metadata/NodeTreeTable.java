@@ -102,7 +102,7 @@ public class NodeTreeTable extends TreeTableView<TreeTable.Node> {
         up.setOnAction(ae -> moveChildUp(getSelectionModel().getSelectedItem()));
         down.setOnAction(ae -> moveChildDown(getSelectionModel().getSelectedItem()));
         setContextMenu(new ContextMenu(flatten, hide, up, down));
-       
+
         setTreeTable(treeTable);
     }
 

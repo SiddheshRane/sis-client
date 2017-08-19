@@ -114,7 +114,7 @@ public class MetadataView extends VBox {
      * widget, hence a separate {@link TreeItem} need not be created for it. You
      * can chain this predicate to add your extra rules.
      */
-    public final Predicate<TreeTable.Node> notCoveredByCustomWidget = new Predicate<TreeTable.Node>() {
+    public static final Predicate<TreeTable.Node> notCoveredByCustomWidget = new Predicate<TreeTable.Node>() {
         @Override
         public boolean test(TreeTable.Node t) {
             String id = t.getValue(IDENTIFIER);
@@ -159,7 +159,7 @@ public class MetadataView extends VBox {
     public MetadataView(TreeTable metadata) {
         this.metadata = metadata;
         expandNodeProperty.addListener(ob -> expandNodes(treeTableView.getRoot()));
-        
+
         rootprefs = Preferences.userNodeForPackage(MetadataView.class);
         prefBox = new ComboBox<>();
         prefBox.setEditable(true);
@@ -515,35 +515,53 @@ public class MetadataView extends VBox {
 
     }
 
-    public  static class MetadataCell extends TreeTableCell<TreeTable.Node, TreeTable.Node> {
+    public static class MetadataCell extends TreeTableCell<TreeTable.Node, TreeTable.Node> {
 
         public MetadataCell() {
             setWrapText(true);
+        }
+        @Override
+        public void startEdit() {
+            super.startEdit(); //To change body of generated methods, choose Tools | Templates.
+            System.out.println("edit started");
+        }
+        @Override
+        public void cancelEdit() {
+            super.cancelEdit(); //To change body of generated methods, choose Tools | Templates.
+            System.out.println("edit cancelled");
+        }
+        @Override
+        public void commitEdit(TreeTable.Node newValue) {
+            super.commitEdit(newValue); //To change body of generated methods, choose Tools | Templates.
+            System.out.println("edit commited newValue = " + newValue);
         }
 
         @Override
         protected void updateItem(TreeTable.Node node, boolean empty) {
             super.updateItem(node, empty);
-
+            setText("");
             if (empty) {
                 setGraphic(null);
-                setText("");
                 return;
             }
+            
             Object value = node.getValue(VALUE);
             Object userObject = node.getUserObject();
             Object item = value == null ? userObject == null ? "" : userObject : value;
-            setText("");
             if (item instanceof ControlledVocabulary) {
                 ControlledVocabulary vocab = (ControlledVocabulary) item;
                 ControlledVocabularyBox comboBox = new ControlledVocabularyBox(vocab);
+                comboBox.valueProperty().addListener((observable, oldValue, newValue) -> {
+                    System.out.println("setting value");
+                    node.setValue(VALUE, comboBox.getValue());
+                });
                 setGraphic(comboBox);
             } else if (item instanceof Boolean) {
                 final CheckBox checkBox = new CheckBox();
                 checkBox.setSelected((Boolean) item);
                 setGraphic(checkBox);
             } else if (item instanceof Double) {
-                final Spinner spinner = new Spinner(Double.MIN_VALUE, Double.MAX_VALUE, (double) item);
+                final Spinner spinner = new Spinner(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, (double) item);
                 spinner.setEditable(true);
                 setGraphic(spinner);
             } else if (item instanceof Integer) {

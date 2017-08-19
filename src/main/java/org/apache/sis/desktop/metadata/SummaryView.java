@@ -18,9 +18,12 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.Text;
+import org.apache.sis.metadata.MetadataStandard;
+import org.apache.sis.metadata.ValueExistencePolicy;
 import org.apache.sis.util.collection.TableColumn;
 import org.apache.sis.util.collection.TreeTable;
 import org.opengis.metadata.Identifier;
+import org.opengis.metadata.Metadata;
 import org.opengis.metadata.spatial.Dimension;
 import org.opengis.referencing.ReferenceSystem;
 import org.opengis.util.ControlledVocabulary;
@@ -76,6 +79,10 @@ public class SummaryView extends AnchorPane implements Initializable {
         }
     }
 
+    public SummaryView(Metadata metadata){
+        this(MetadataStandard.ISO_19115.asTreeTable(metadata, Metadata.class, ValueExistencePolicy.NON_NIL));
+    }
+    
     void loadMetadata() {
         //Title in identificationInfo/citation/title
         TreeTable.Node titleNode = getNodeByIdentifierPath(metadata, identificationInfo, citation, "title");

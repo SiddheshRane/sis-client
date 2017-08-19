@@ -13,10 +13,9 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Spinner;
+import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.layout.HBox;
-import org.apache.sis.metadata.iso.extent.DefaultGeographicBoundingBox;
 import org.apache.sis.metadata.iso.extent.DefaultVerticalExtent;
-import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.metadata.extent.VerticalExtent;
 
 /**
@@ -67,19 +66,22 @@ public class VerticalExtentBox extends HBox implements Initializable {
     };
 
     public VerticalExtentBox(VerticalExtent extent) {
-        FXMLLoader loader = new FXMLLoader(GeographicExtentBox.class.getResource("VerticalExtent.fxml"));
+        FXMLLoader loader = new FXMLLoader(VerticalExtentBox.class.getResource("VerticalExtent.fxml"));
         loader.setRoot(this);
         loader.setController(this);
         try {
             loader.load();
         } catch (IOException ex) {
-            Logger.getLogger(GeographicExtentBox.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(VerticalExtentBox.class.getName()).log(Level.SEVERE, null, ex);
         }
         setValue(extent);
     }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        min.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY));
+        max.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY));
+
         valueProperty().addListener(invalidationListener);
         min.getValueFactory().valueProperty().addListener(invalidationListener);
         max.getValueFactory().valueProperty().addListener(invalidationListener);

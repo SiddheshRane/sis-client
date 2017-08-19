@@ -5,7 +5,6 @@
 <?import javafx.scene.control.Spinner?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.control.SpinnerValueFactory.DoubleSpinnerValueFactory?>
 
 <fx:root spacing="4.0" type="HBox" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1">
    <children>
@@ -13,9 +12,6 @@
          <children>
             <Label text="Min Value" />
             <Spinner fx:id="min" minWidth="50.0" prefHeight="26.0" prefWidth="100.0" >
-                 <valueFactory>
-                        <SpinnerValueFactory.DoubleSpinnerValueFactory max="90" min="-90" value="0" />
-                    </valueFactory>
             </Spinner>
          </children>
       </VBox>
@@ -23,9 +19,6 @@
          <children>
             <Label text="Max Value" />
             <Spinner fx:id="max" prefWidth="100.0" >
-                 <valueFactory>
-                        <SpinnerValueFactory.DoubleSpinnerValueFactory max="90.0" min="-90.0" value="0.0" />
-                    </valueFactory>
             </Spinner>
          </children>
       </VBox>
