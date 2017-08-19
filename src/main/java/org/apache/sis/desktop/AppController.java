@@ -14,6 +14,7 @@ import java.util.ResourceBundle;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
@@ -22,10 +23,14 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.input.DragEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
@@ -38,6 +43,8 @@ import org.apache.sis.storage.DataStores;
 import org.apache.sis.util.collection.TableColumn;
 import org.apache.sis.util.collection.TreeTable;
 import org.apache.sis.desktop.dnd.DndController;
+import org.apache.sis.desktop.metadata.SummaryView;
+import org.opengis.metadata.Metadata;
 
 /**
  * FXML Controller class
@@ -58,6 +65,7 @@ public class AppController implements Initializable {
     private VBox about;
     @FXML
     private AboutController aboutController;
+    private Stage aboutWindow;
 
     @FXML
     TabPane tabPane;
@@ -85,14 +93,20 @@ public class AppController implements Initializable {
                 tabPane.getSelectionModel().select(fileTab);
             }
         });
+
+        aboutWindow = new Stage(StageStyle.DECORATED);
+        aboutWindow.setTitle("About");
+        Scene scene = new Scene(about, 500, 500);
+        aboutWindow.setScene(scene);
+        aboutWindow.initModality(Modality.APPLICATION_MODAL);
     }
 
     @FXML
     private void showAboutWindow() {
-        Stage aboutWindow = new Stage(StageStyle.DECORATED);
-        aboutWindow.setTitle("About");
-        aboutWindow.setScene(new Scene(about, 500, 500));
-        aboutWindow.initModality(Modality.APPLICATION_MODAL);
+        if (aboutWindow.isShowing()) {
+            aboutWindow.requestFocus();
+            return;
+        }
         aboutWindow.show();
     }
 
@@ -112,26 +126,65 @@ public class AppController implements Initializable {
 
     }
 
+    public static final Predicate<TreeTable.Node> METADATA_EXPANSION = node -> {
+        CharSequence name = node.getValue(TableColumn.NAME);
+        switch (name.toString()) {
+            case "Metadata":
+            case "Spatial representation info":
+            case "Identification info":
+            case "Extent":
+            case "Geographic element":
+            case "Vertical element":
+                return true;
+        }
+        return false;
+    };
+
     public void openMetadataTab(File file) {
         Tab tab = new Tab(file.getName());
         tab.setClosable(true);
-        final MetadataTable metadataView = new MetadataTable(file);
-        final Predicate<TreeTable.Node> METADATA_EXPANSION = node -> {
-            CharSequence name = node.getValue(TableColumn.NAME);
-            switch (name.toString()) {
-                case "Metadata":
-                case "Spatial representation info":
-                case "Identification info":
-                case "Extent":
-                case "Geographic element":
-                case "Vertical element":
-                    return true;
-            }
-            return false;
-        };
-        metadataView.setExpandNode(METADATA_EXPANSION.or(MetadataView.EXPAND_SINGLE_CHILD));
-        tab.setContent(metadataView);
         tabPane.getTabs().add(tab);
+
+        Task<Metadata> task = new Task<Metadata>() {
+            @Override
+            protected Metadata call() throws DataStoreException {
+                return DataStores.open(file).getMetadata();
+            }
+        };
+        task.setOnRunning(e -> {
+            tab.setContent(new ProgressIndicator(-1));
+        });
+        task.setOnSucceeded(e -> {
+            Metadata mt = task.getValue();
+            MetadataTable table = new MetadataTable(mt);
+            SummaryView summary = new SummaryView(mt);
+            ToggleButton summaryToggle = new ToggleButton("Summary");
+            VBox pane = new VBox(summaryToggle, summary);
+            VBox.setVgrow(table, Priority.ALWAYS);
+
+            table.setExpandNode(METADATA_EXPANSION);
+            summaryToggle.setSelected(true);
+            summaryToggle.selectedProperty().addListener((observable, oldValue, newValue) -> {
+                if (newValue) {
+                    pane.getChildren().remove(table);
+                    pane.getChildren().add(1, summary);
+                } else {
+                    pane.getChildren().add(1, table);
+                    pane.getChildren().remove(summary);
+                }
+            });
+            tab.setContent(pane);
+        });
+        task.setOnFailed(e -> tab.setContent(new TextArea(task.getException().toString())));
+
+        Thread t = new Thread(task);
+        t.setDaemon(true);
+        t.start();
+        //        final MetadataTable metadataView = new MetadataTable(file);
+
+        //                metadataView.setExpandNode(METADATA_EXPANSION.or(MetadataView.EXPAND_SINGLE_CHILD));
+        //        tab.setContent(metadataView);
+        ;
     }
 
     public void openFeatureEditorTab(File file) {
