@@ -8,6 +8,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
+import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 import javafx.collections.ObservableSet;
 import javafx.collections.SetChangeListener;
@@ -42,18 +43,21 @@ public class DndController implements Initializable {
 
     private final ObservableSet<File> draggedFiles = FXCollections.observableSet();
     private final ObservableMap<File, Node> fileNodeMap = FXCollections.observableHashMap();
-    private final ObjectProperty<Callback<File, Node>> fileNodeFactory = new SimpleObjectProperty<>();
 
+    final ObservableList<FileChooser.ExtensionFilter> extensionFilters = FXCollections.observableArrayList();
+    public ObservableList<FileChooser.ExtensionFilter> getExtensionFilters() {
+        return extensionFilters;
+    }
+
+    private final ObjectProperty<Callback<File, Node>> fileNodeFactory = new SimpleObjectProperty<>();
+    public ObjectProperty fileNodeFactoryProperty() {
+        return fileNodeFactory;
+    }
     public Callback<File, Node> getFileNodeFactory() {
         return fileNodeFactory.get();
     }
-
     public void setFileNodeFactory(Callback<File, Node> value) {
         fileNodeFactory.set(value);
-    }
-
-    public ObjectProperty fileNodeFactoryProperty() {
-        return fileNodeFactory;
     }
 
     public DndController() {
@@ -135,11 +139,7 @@ public class DndController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         addNew.setOnAction(me -> {
             FileChooser fileChooser = new FileChooser();
-            fileChooser.getExtensionFilters().addAll(
-                    new FileChooser.ExtensionFilter("Well Known Text", "*.wkt"),
-                    new FileChooser.ExtensionFilter("NetCDF", "*.nc"),
-                    new FileChooser.ExtensionFilter("Any type", "*")
-            );
+            fileChooser.getExtensionFilters().setAll(getExtensionFilters());
             File file = fileChooser.showOpenDialog(dragPane.getScene().getWindow());
             if (file != null) {
                 getDraggedFiles().add(file);
