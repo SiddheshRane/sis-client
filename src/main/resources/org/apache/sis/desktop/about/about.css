@@ -1,0 +1,17 @@
+/* 
+    Created on : 29 Mar, 2017, 2:28:16 PM
+    Author     : Siddhesh Rane 
+*/
+* {
+    -banner-bg: #387892;
+    -banner-fg: ladder(-banner-bg, #ffffffaa 49%, #000000aa 50%);
+}
+.banner {
+    -fx-background-color: -banner-bg;
+}
+.heading {
+    -fx-font-family: "Noto Sans";
+    -fx-font-size: 3em;
+    -fx-fill: -banner-fg;
+    -fx-text-fill: -banner-fg;
+}

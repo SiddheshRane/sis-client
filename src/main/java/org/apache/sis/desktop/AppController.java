@@ -1,11 +1,15 @@
 package org.apache.sis.desktop;
 
+import org.apache.sis.desktop.metadata.MetadataTable;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.ResourceBundle;
 import java.util.function.Predicate;
 import java.util.logging.Level;
@@ -22,14 +26,13 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.input.DragEvent;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import org.apache.sis.setup.About;
+import org.apache.sis.desktop.about.AboutController;
 import org.apache.sis.storage.DataStoreException;
 import org.apache.sis.storage.DataStores;
 import org.apache.sis.util.collection.TableColumn;
@@ -45,58 +48,50 @@ public class AppController implements Initializable {
 
     @FXML
     BorderPane borderPane;
-
     @FXML
     private MenuBar menuBar;
     @FXML
     private MenuItem openMenu;
     @FXML
     private MenuItem aboutMenu;
+    @FXML
+    private VBox about;
+    @FXML
+    private AboutController aboutController;
 
     @FXML
     TabPane tabPane;
     @FXML
-    Tab homeTab;
-    @FXML
     Tab fileTab;
-
-    Pane dndPane;
     @FXML
     DndController dndController;
 
-    @FXML
-    StackPane homePane;
+    public static final List<FileChooser.ExtensionFilter> EXTENSION_FILTERS = Collections.unmodifiableList(Arrays.asList(
+            new FileChooser.ExtensionFilter("Well Known Text", "*.wkt"),
+            new FileChooser.ExtensionFilter("NetCDF", "*.nc"),
+            new FileChooser.ExtensionFilter("GPS Exchange Format", "*.gpx"),
+            new FileChooser.ExtensionFilter("Any type", "*")));
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         dndController.setFileNodeFactory(this::createDisplayNode);
+        dndController.getExtensionFilters().setAll(EXTENSION_FILTERS);
+        openMenu.setOnAction(ae -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.getExtensionFilters().setAll(EXTENSION_FILTERS);
+            List<File> files = fileChooser.showOpenMultipleDialog(borderPane.getScene().getWindow());
+            if (files != null) {
+                dndController.getDraggedFiles().addAll(files);
+                tabPane.getSelectionModel().select(fileTab);
+            }
+        });
     }
 
     @FXML
     private void showAboutWindow() {
-        final TreeTable configuration = About.configuration();
-        NodeTreeTable sisabout = new NodeTreeTable(configuration);
-        sisabout.setExpandNode(new Predicate<TreeTable.Node>() {
-            @Override
-            public boolean test(TreeTable.Node node) {
-                if (node.getParent() == null) {
-                    return true;
-                }
-                CharSequence name = node.getValue(TableColumn.NAME);
-                switch (name.toString()) {
-                    case "Versions":
-                    case "Localization":
-                    case "Locale":
-                    case "Timezone":
-                        return true;
-                }
-                return false;
-            }
-        });
-
         Stage aboutWindow = new Stage(StageStyle.DECORATED);
         aboutWindow.setTitle("About");
-        aboutWindow.setScene(new Scene(sisabout));
+        aboutWindow.setScene(new Scene(about, 500, 500));
         aboutWindow.initModality(Modality.APPLICATION_MODAL);
         aboutWindow.show();
     }
@@ -120,7 +115,7 @@ public class AppController implements Initializable {
     public void openMetadataTab(File file) {
         Tab tab = new Tab(file.getName());
         tab.setClosable(true);
-        final MetadataView metadataView = new MetadataView(file);
+        final MetadataTable metadataView = new MetadataTable(file);
         final Predicate<TreeTable.Node> METADATA_EXPANSION = node -> {
             CharSequence name = node.getValue(TableColumn.NAME);
             switch (name.toString()) {
@@ -187,11 +182,4 @@ public class AppController implements Initializable {
         vBox.setOnContextMenuRequested(cme -> cm.show(vBox, cme.getScreenX(), cme.getScreenY()));
         return vBox;
     }
-
-//    private void createCRSTable() {
-//        FXCRSTable table = new FXCRSTable();
-//        Tab tab = new Tab("CRS");
-//        tab.setContent(table);
-//        tabPane.getTabs().add(tab);
-//    }
 }

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.effect.DropShadow?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox fx:id="vBox" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.apache.sis.desktop.about.AboutController">
+   <children>
+      <HBox alignment="CENTER_LEFT" pickOnBounds="false" spacing="10.0" styleClass="banner" stylesheets="@about.css">
+         <padding>
+            <Insets left="5.0" right="5.0" />
+         </padding>
+         <children>
+            <Label fx:id="title" contentDisplay="BOTTOM" styleClass="heading" text="Apache SIS">
+               <graphic>
+                  <Hyperlink fx:id="website" contentDisplay="TOP" text="http://sis.apache.org" textFill="#dadada">
+                     <font>
+                        <Font size="14.0" />
+                     </font>
+                  </Hyperlink>
+               </graphic>
+            </Label>
+            <StackPane HBox.hgrow="ALWAYS" />
+            <ImageView cache="true" cacheHint="QUALITY" fitHeight="96.0" fitWidth="87.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../../../../../sis-logo-128.png" />
+               </image>
+               <HBox.margin>
+                  <Insets bottom="5.0" top="5.0" />
+               </HBox.margin>
+            </ImageView>
+         </children>
+         <effect>
+            <DropShadow height="54.39" radius="18.3475" spread="0.05" />
+         </effect>
+      </HBox>
+   </children>
+</VBox>
