@@ -75,13 +75,14 @@ import org.opengis.util.InternationalString;
 import org.apache.sis.desktop.metadata.ControlledVocabularyBox;
 import org.apache.sis.desktop.metadata.GeographicExtentBox;
 import org.apache.sis.desktop.metadata.IdentifierBox;
+import org.apache.sis.desktop.metadata.MetadataTable;
 import org.apache.sis.desktop.metadata.SummaryView;
 import org.apache.sis.desktop.metadata.VerticalExtentBox;
 import org.opengis.referencing.ReferenceSystem;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /**
- *
+ *  This class is being replaced by {@link MetadataTable}. 
  * @author Siddhesh Rane
  */
 public class MetadataView extends VBox {

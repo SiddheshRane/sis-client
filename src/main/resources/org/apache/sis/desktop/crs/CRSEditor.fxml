@@ -3,6 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressIndicator?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Spinner?>
 <?import javafx.scene.control.TableColumn?>
@@ -19,7 +20,7 @@
 
 <fx:root styleClass="summary" stylesheets="@../app.css" type="AnchorPane" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1">
     <children>
-        <ScrollPane fitToWidth="true" prefHeight="414.0" prefWidth="537.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" prefHeight="414.0" prefWidth="537.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <content>
                 <GridPane fx:id="grid" alignment="TOP_CENTER" hgap="5.0" vgap="10.0">
                     <columnConstraints>
@@ -82,6 +83,7 @@
                         <Label styleClass="key" text="Domain of Validity" GridPane.rowIndex="6" />
                           <Label styleClass="header" text="Semi Major" GridPane.rowIndex="3" GridPane.valignment="TOP" />
                           <Label styleClass="header" text="Semi Minor" GridPane.rowIndex="3" GridPane.valignment="BOTTOM" />
+                  <ProgressIndicator fx:id="loadingProgress" maxWidth="-Infinity" prefHeight="20.0" GridPane.halignment="LEFT" />
                     </children>
                     <padding>
                         <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />

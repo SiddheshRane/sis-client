@@ -14,6 +14,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.ObjectProperty;
@@ -27,6 +29,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.TableColumn;
@@ -62,7 +65,7 @@ import org.opengis.referencing.datum.Datum;
 import org.opengis.referencing.datum.GeodeticDatum;
 
 /**
- * FXML Controller class
+ * Edit CRS definitions.
  *
  * @author Siddhesh Rane
  */
@@ -73,7 +76,7 @@ public class CRSEditor extends AnchorPane implements Initializable {
     private static final ConcurrentHashMap<String, String> CRS_CODE = new ConcurrentHashMap<>();
     private static final List<CoordinateSystem> COORDINATE_SYSTEMS = new ArrayList<>();
     private static final List<PrimeMeridian> PRIME_MERIDIANS = new ArrayList();
-    
+
     public static final StringConverter<PrimeMeridian> PRIME_MERIDIAN_STRING_CONVERTER = new StringConverter<PrimeMeridian>() {
         @Override
         public String toString(PrimeMeridian object) {
@@ -134,6 +137,7 @@ public class CRSEditor extends AnchorPane implements Initializable {
             return trimmed;
         }
     };
+
     private static final CountDownLatch allDefsLoaded = new CountDownLatch(3);
     static {
         Runnable pmLoader = () -> {
@@ -211,6 +215,8 @@ public class CRSEditor extends AnchorPane implements Initializable {
     @FXML
     private GridPane grid;
     @FXML
+    private ProgressIndicator loadingProgress;
+    @FXML
     private ComboBox<String> crsName;
     @FXML
     private TextField datumName;
@@ -235,13 +241,44 @@ public class CRSEditor extends AnchorPane implements Initializable {
     @FXML
     private TableColumn<CoordinateSystemAxis, AxisDirection> axisDirectionColumn;
 
-    private CoordinateReferenceSystem crs;
+    private ObjectProperty<CoordinateReferenceSystem> crsProperty = new SimpleObjectProperty<>();
+    public ObjectProperty<CoordinateReferenceSystem> crsProperty() {
+        return crsProperty;
+    }
+    public CoordinateReferenceSystem getCrs() {
+        return crsProperty.get();
+    }
+    public void setCrs(CoordinateReferenceSystem crs) {
+        crsProperty.set(crs);
+    }
+
     private final StringProperty crsCode = new SimpleStringProperty();
-    private Service<CoordinateReferenceSystem> fetchCrsService;
+
+    private final Service<CoordinateReferenceSystem> fetchCrsService;
+
+    public CRSEditor() {
+        fetchCrsService = new Service<CoordinateReferenceSystem>() {
+
+            @Override
+            protected Task<CoordinateReferenceSystem> createTask() {
+                return new Task<CoordinateReferenceSystem>() {
+                    @Override
+                    protected CoordinateReferenceSystem call() throws Exception {
+                        return CRS.forCode(crsCode.getValue());
+                    }
+                };
+            }
+        };
+        fetchCrsService.setOnSucceeded(wse -> setCrs(fetchCrsService.getValue()));
+        fetchCrsService.setOnFailed(wse -> System.out.println("failed to load" + crsCode.get()));
+        loadFXML();
+        crsCode.addListener(listener);
+        crsProperty.addListener(listener);
+    }
 
     public CRSEditor(CoordinateReferenceSystem crs) {
-        loadFXML();
-        setValues(crs);
+        this();
+        setCrs(crs);
     }
 
     /**
@@ -251,30 +288,8 @@ public class CRSEditor extends AnchorPane implements Initializable {
      * @param code
      */
     public CRSEditor(String code) {
-        this((CoordinateReferenceSystem) null);
+        this();
         crsCode.set(code);
-//        ProgressIndicator loading = new ProgressIndicator(-1);
-//        Task<CoordinateReferenceSystem> task = new Task<CoordinateReferenceSystem>() {
-//            @Override
-//            protected CoordinateReferenceSystem call() throws Exception {
-//                return CRS.forCode(code);
-//            }
-//        };
-//        loading.progressProperty().bind(task.progressProperty());
-//        AnchorPane.setLeftAnchor(loading, 20.0);
-//        AnchorPane.setRightAnchor(loading, 20.0);
-//        AnchorPane.setTopAnchor(loading, 20.0);
-//        AnchorPane.setBottomAnchor(loading, 20.0);
-//        getChildren().add(loading);
-//
-//        task.setOnSucceeded((event) -> {
-//            getChildren().clear();
-//            loadFXML();
-//            setValues(task.getValue());
-//        });
-//        Thread thread = new Thread(task);
-//        thread.setDaemon(true);
-////        thread.start();
     }
 
     /**
@@ -282,6 +297,7 @@ public class CRSEditor extends AnchorPane implements Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        loadingProgress.visibleProperty().bind(fetchCrsService.runningProperty());
         crsName.setConverter(CRS_CODE_TO_DESCRIPTION_CONVERTER);
 
         semiMajor.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(0, Double.MAX_VALUE));
@@ -299,44 +315,25 @@ public class CRSEditor extends AnchorPane implements Initializable {
         axisDirectionColumn.setCellFactory(param -> new ChoiceBoxTableCell<>(AXIS_DIRECTION_STRING_CONVERTER, AxisDirection.values()));
         axisUnitColumn.setCellValueFactory(param -> new SimpleObjectProperty<>(param.getValue().getUnit().getName()));
 
-        fetchCrsService = new Service<CoordinateReferenceSystem>() {
-            {
-                crsName.valueProperty().addListener((observable, oldValue, newValue) -> restart());
-                setOnFailed(ae -> System.out.println("Failed " + crsName.getValue()));
-                valueProperty().addListener((observable, oldValue, newValue) -> {
-                    System.out.println("newValue = " + newValue);
-                    if (newValue != null) {
-                        setValues(newValue);
-                    }
-                });
-            }
-            @Override
-            protected Task<CoordinateReferenceSystem> createTask() {
-                return new Task<CoordinateReferenceSystem>() {
-                    @Override
-                    protected CoordinateReferenceSystem call() throws Exception {
-                        System.out.println("fetching new CRS forCode(" + crsName.getValue() + ")");
-                        return CRS.forCode(crsName.getValue());
-                    }
-                };
-            }
-
-        };
-        crsCode.addListener((observable, oldValue, newValue) -> {
-            System.out.println("oldValue + newValue = " + oldValue + " " + newValue);
-        });
         crsName.valueProperty().bindBidirectional(crsCode);
-        
+
         Thread loadChoices = new Thread(() -> {
             try {
                 allDefsLoaded.await();
-                Platform.runLater(()->populateChoices());
+                Platform.runLater(() -> populateChoices());
             } catch (InterruptedException ex) {
                 Logger.getLogger(CRSEditor.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
         loadChoices.setDaemon(true);
         loadChoices.start();
+
+        datumName.textProperty().addListener(listener);
+        primeMeridian.valueProperty().addListener(listener);
+        semiMajor.valueProperty().addListener(listener);
+        semiMinor.valueProperty().addListener(listener);
+        coordSystemType.valueProperty().addListener(listener);
+        areaDescription.textProperty().addListener(listener);
     }
 
     private void populateChoices() {
@@ -360,10 +357,6 @@ public class CRSEditor extends AnchorPane implements Initializable {
     }
 
     private void setValues(CoordinateReferenceSystem crs) {
-        if (crs == this.crs) {
-            return;
-        }
-        this.crs = crs;
         Identifier id = crs.getIdentifiers().iterator().next();
         crsName.setValue(id.getCodeSpace() + ':' + id.getCode());
         if (crs instanceof SingleCRS) {
@@ -391,12 +384,15 @@ public class CRSEditor extends AnchorPane implements Initializable {
             }).findAny();
             if (boundingBox.isPresent()) {
                 GeographicBoundingBox box = (GeographicBoundingBox) boundingBox.get();
-                GeographicExtentBox geographicExtentBox = new GeographicExtentBox(box);
-                grid.getChildren().add(geographicExtentBox);
-                GridPane.setConstraints(geographicExtentBox, 1, 7);
+                geographicExtentBox.setValue(box);
+                if (!grid.getChildren().contains(geographicExtentBox)) {
+                    grid.getChildren().add(geographicExtentBox);
+                    GridPane.setConstraints(geographicExtentBox, 1, 7);
+                }
             }
         }
     }
+    private GeographicExtentBox geographicExtentBox = new GeographicExtentBox();
 
     private void setAxes(CoordinateSystem cs) throws IndexOutOfBoundsException {
         axesTable.getItems().clear();
@@ -414,4 +410,29 @@ public class CRSEditor extends AnchorPane implements Initializable {
         semiMinor.setEditable(enable);
         coordSystemType.setDisable(!enable);
     }
+
+    InvalidationListener listener = new InvalidationListener() {
+        boolean changeIsLocal;
+        @Override
+        public void invalidated(Observable ob) {
+            if (changeIsLocal) {
+                return;
+            }
+            changeIsLocal = true;
+            if (ob == crsProperty) {
+                final CoordinateReferenceSystem crs = getCrs();
+                //we have directly received a crs
+                setValues(crs);
+            } else if (ob == crsCode) {
+                //crs needs to be constructed from the code
+                fetchCrsService.restart();
+            } else {
+                //get values from all other form fields and construct a new CRS, then setCrs
+                if (!crsCode.getValue().startsWith("Modified")) {
+                    crsCode.set("Modified " + crsCode.get());
+                }
+            }
+            changeIsLocal = false;
+        }
+    };
 }

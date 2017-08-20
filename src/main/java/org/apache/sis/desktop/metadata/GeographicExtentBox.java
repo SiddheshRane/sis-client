@@ -53,6 +53,10 @@ public class GeographicExtentBox extends BorderPane implements Initializable {
         return valueProperty().get();
     }
 
+    public GeographicExtentBox() {
+        this(new DefaultGeographicBoundingBox(0, 0, 0, 0));
+    }
+
     public GeographicExtentBox(GeographicBoundingBox box) {
         FXMLLoader loader = new FXMLLoader(GeographicExtentBox.class.getResource("GeographicExtent.fxml"));
         loader.setRoot(this);
