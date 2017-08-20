@@ -71,11 +71,12 @@ public class GeographicExtentBox extends BorderPane implements Initializable {
         south.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(-90, 90));
         east.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(-180, 180));
         west.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(-180, 180));
+        final AngleFormat angleFormat = new AngleFormat("DD°MM′SS.#″");
 
-        north.getEditor().setTextFormatter(new TextFormatter(new FormatStringConverter(AngleFormat.getInstance())));
-        south.getEditor().setTextFormatter(new TextFormatter(new FormatStringConverter(AngleFormat.getInstance())));
-        west.getEditor().setTextFormatter(new TextFormatter(new FormatStringConverter(AngleFormat.getInstance())));
-        east.getEditor().setTextFormatter(new TextFormatter(new FormatStringConverter(AngleFormat.getInstance())));
+        north.getEditor().setTextFormatter(new TextFormatter(new FormatStringConverter(angleFormat)));
+        south.getEditor().setTextFormatter(new TextFormatter(new FormatStringConverter(angleFormat)));
+        west.getEditor().setTextFormatter(new TextFormatter(new FormatStringConverter(angleFormat)));
+        east.getEditor().setTextFormatter(new TextFormatter(new FormatStringConverter(angleFormat)));
 
         final InvalidationListener invalidationListener = new InvalidationListener() {
             boolean changeIsLocal;

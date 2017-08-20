@@ -14,11 +14,17 @@ import java.util.ResourceBundle;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.prefs.Preferences;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.BooleanExpression;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuBar;
@@ -30,6 +36,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.input.DragEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
@@ -159,10 +166,35 @@ public class AppController implements Initializable {
             MetadataTable table = new MetadataTable(mt);
             SummaryView summary = new SummaryView(mt);
             ToggleButton summaryToggle = new ToggleButton("Summary");
-            VBox pane = new VBox(summaryToggle, summary);
+
+            Config config = new Config(Preferences.userNodeForPackage(MainApp.class), table);
+            ComboBox<String> prefBox = new ComboBox<>();
+            prefBox.setEditable(true);
+            Bindings.bindContent(prefBox.getItems(), config.getAvailableConfigurations());
+            prefBox.setValue(config.getCurrentConfig());
+            
+            Button save = new Button("Save");
+            save.disableProperty().bind(config.configDirtyProperty().isEqualTo(false));
+            save.setOnAction(ae -> {
+                config.updateConfig();
+                config.saveConfig(prefBox.getValue());
+            });
+
+            prefBox.valueProperty().addListener((observable, oldValue, newValue) -> {
+                if (prefBox.getItems().contains(newValue)) {
+                    config.loadConfig(newValue);
+                    System.out.println("Loaded config " + newValue);
+                } else {
+                    config.updateConfig();
+                    config.saveConfig(newValue);
+                    System.out.println("new config " + newValue + " saved");
+                }
+            });
+            HBox hBox = new HBox(summaryToggle, prefBox, save);
+            hBox.getStyleClass().add("metadata-controls");
+            VBox pane = new VBox(hBox, summary);
             VBox.setVgrow(table, Priority.ALWAYS);
 
-            table.setExpandNode(METADATA_EXPANSION);
             summaryToggle.setSelected(true);
             summaryToggle.selectedProperty().addListener((observable, oldValue, newValue) -> {
                 if (newValue) {
@@ -180,11 +212,6 @@ public class AppController implements Initializable {
         Thread t = new Thread(task);
         t.setDaemon(true);
         t.start();
-        //        final MetadataTable metadataView = new MetadataTable(file);
-
-        //                metadataView.setExpandNode(METADATA_EXPANSION.or(MetadataView.EXPAND_SINGLE_CHILD));
-        //        tab.setContent(metadataView);
-        ;
     }
 
     public void openFeatureEditorTab(File file) {
@@ -196,6 +223,7 @@ public class AppController implements Initializable {
     }
 
     private void loadPreferences() {
+        //Here we should create default configurations
     }
 
     /**

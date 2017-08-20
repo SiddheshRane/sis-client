@@ -19,17 +19,23 @@ public class MetadataTable extends NodeTreeTable {
     Metadata metadata;
     DefaultMetadata editableMetadata;
 
-    public MetadataTable() {
-        this((TreeTable) null);
+    private MetadataTable() {
+        valueColumn.setCellFactory(cdf -> new MetadataView.MetadataCell());
+        setTableMenuButtonVisible(true);
+        setEditable(true);
+        setCreateTreeItemForNode(HIDE_EMPTY_LEAF.and(MetadataView.notCoveredByCustomWidget));
     }
 
     public MetadataTable(Metadata metadata) {
-        this(MetadataStandard.ISO_19115.asTreeTable(new DefaultMetadata(metadata), Metadata.class, ValueExistencePolicy.NON_EMPTY));
+        this();
+        this.metadata = metadata;
+        editableMetadata = new DefaultMetadata(metadata);
+        TreeTable tt = MetadataStandard.ISO_19115.asTreeTable(editableMetadata, Metadata.class, ValueExistencePolicy.NON_EMPTY);
+        setTreeTable(tt);
     }
 
     public MetadataTable(File file) {
-        this((TreeTable) null);
-
+        this();
         Task<Metadata> task = new Task<Metadata>() {
             @Override
             protected Metadata call() throws DataStoreException {
@@ -39,10 +45,8 @@ public class MetadataTable extends NodeTreeTable {
         };
         task.setOnSucceeded(wse -> {
             final Metadata value = task.getValue();
-            System.out.println("class = " + value.getClass().getName());
+            metadata = value;
             editableMetadata = new DefaultMetadata(value);
-            System.out.println("val==defval "+(value == editableMetadata));
-            System.out.println("editableMetadata.isModifiable() = " + editableMetadata.isModifiable());
             setTreeTable(MetadataStandard.ISO_19115.asTreeTable(editableMetadata, Metadata.class, ValueExistencePolicy.ALL));
         });
         task.setOnRunning(wse -> {
@@ -61,11 +65,10 @@ public class MetadataTable extends NodeTreeTable {
 
     }
 
-    private MetadataTable(TreeTable treeTable) {
-        super(treeTable);
-        valueColumn.setCellFactory(cdf -> new MetadataView.MetadataCell());
-        setTableMenuButtonVisible(true);
-        setEditable(true);
+    @Override
+    public void setTreeTable(TreeTable treeTable) {
+        super.setTreeTable(treeTable);
+        getColumns().remove(idColumn);
     }
 
 }

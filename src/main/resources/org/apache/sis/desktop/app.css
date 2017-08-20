@@ -7,10 +7,6 @@
     -fx-text-fill : #696969;
 }
 
-.latlongspinner .increment-arrow-button {
-    visibility: hidden;
-}
-
 .tree-table-row-cell:selected{
     -fx-background-color:#000000aa;
 }
@@ -32,18 +28,8 @@
     -fx-font-size:1em;
     -fx-text-fill:#8d8d8d;
 }
-/*.text-area, .text-field {
-    -fx-background-color: white;
-    -fx-border-color: grey;
-    -fx-border-width: 1px;
-}
 
-.text-area:selected, .text-area:focused , text-field:selected, .text-field:focused{
-    -fx-border-color: #387892;
-    -fx-border-width: 2px;
-}*/
-
-.combo-box .combo-box-popup .list-view .list-cell {
-    -fx-wrap-text:true;
-    -fx-cell-size: -1;
+.metadata-controls {
+    -fx-padding: 5px;
+    -fx-spacing: 5px;
 }

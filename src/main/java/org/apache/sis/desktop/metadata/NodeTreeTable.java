@@ -82,11 +82,11 @@ public class NodeTreeTable extends TreeTableView<TreeTable.Node> {
         }
     }
 
-    public NodeTreeTable() {
-        this(null);
-    }
     public NodeTreeTable(TreeTable treeTable) {
-        this.treeTable = treeTable;
+        this();
+        setTreeTable(treeTable);
+    }
+    public NodeTreeTable() {
         getStyleClass().add("node-tree-table");
         createTableColumns();
         setShowRoot(false);
@@ -102,8 +102,6 @@ public class NodeTreeTable extends TreeTableView<TreeTable.Node> {
         up.setOnAction(ae -> moveChildUp(getSelectionModel().getSelectedItem()));
         down.setOnAction(ae -> moveChildDown(getSelectionModel().getSelectedItem()));
         setContextMenu(new ContextMenu(flatten, hide, up, down));
-
-        setTreeTable(treeTable);
     }
 
     /**
@@ -152,33 +150,46 @@ public class NodeTreeTable extends TreeTableView<TreeTable.Node> {
         }
 
         List<TableColumn<?>> columns = treeTable.getColumns();
-        if (columns.contains(NAME) && nameColumn.getTreeTableView() == null) {
-            getColumns().add(nameColumn);
+        if (columns.contains(NAME)) {
+            if (nameColumn.getTreeTableView() == null) {
+                getColumns().add(nameColumn);
+            }
         } else {
             getColumns().remove(nameColumn);
         }
-        if (columns.contains(IDENTIFIER) && idColumn.getTreeTableView() == null) {
-            getColumns().add(idColumn);
+        if (columns.contains(IDENTIFIER)) {
+            if (idColumn.getTreeTableView() == null) {
+                getColumns().add(idColumn);
+            }
         } else {
             getColumns().remove(idColumn);
         }
-        if (columns.contains(VALUE) && valueColumn.getTreeTableView() == null) {
-            getColumns().add(valueColumn);
+        if (columns.contains(VALUE)) {
+            if (valueColumn.getTreeTableView() == null) {
+                getColumns().add(valueColumn);
+            }
         } else {
             getColumns().remove(valueColumn);
         }
-        if (columns.contains(VALUE_AS_TEXT) && textColumn.getTreeTableView() == null) {
-            getColumns().add(textColumn);
+        if (columns.contains(VALUE_AS_TEXT)) {
+            if (textColumn.getTreeTableView() == null) {
+                getColumns().add(textColumn);
+            }
         } else {
             getColumns().remove(textColumn);
         }
         TreeItem<TreeTable.Node> rootItem = new TreeItem<>(treeTable.getRoot());
-        createTreeItems(rootItem, treeTable.getRoot().getChildren());
-        rootItem.setExpanded(true);
         setRoot(rootItem);
+        rootItem.setExpanded(true);
+        updateRoot();
     }
 
-    private void createTreeItems(TreeItem<TreeTable.Node> rootItem, Collection<TreeTable.Node> children) {
+    public void updateRoot() {
+        getRoot().getChildren().clear();
+        createTreeItems(getRoot(), treeTable.getRoot().getChildren());
+    }
+
+    protected void createTreeItems(TreeItem<TreeTable.Node> rootItem, Collection<TreeTable.Node> children) {
         for (TreeTable.Node node : children) {
             TreeItem parent = rootItem;
             //include this node in the tree table view?
