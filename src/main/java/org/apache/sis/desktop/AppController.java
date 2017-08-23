@@ -50,7 +50,9 @@ import org.apache.sis.storage.DataStores;
 import org.apache.sis.util.collection.TableColumn;
 import org.apache.sis.util.collection.TreeTable;
 import org.apache.sis.desktop.dnd.DndController;
+import org.apache.sis.desktop.metadata.GeographicExtentBox;
 import org.apache.sis.desktop.metadata.SummaryView;
+import org.apache.sis.metadata.iso.extent.DefaultGeographicBoundingBox;
 import org.opengis.metadata.Metadata;
 
 /**
@@ -172,7 +174,7 @@ public class AppController implements Initializable {
             prefBox.setEditable(true);
             Bindings.bindContent(prefBox.getItems(), config.getAvailableConfigurations());
             prefBox.setValue(config.getCurrentConfig());
-            
+
             Button save = new Button("Save");
             save.disableProperty().bind(config.configDirtyProperty().isEqualTo(false));
             save.setOnAction(ae -> {
