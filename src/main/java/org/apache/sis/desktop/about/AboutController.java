@@ -47,7 +47,7 @@ public class AboutController implements Initializable {
                     try {
                         desktop.browse(new URI("http://sis.apache.org"));
                     } catch (IOException ex) {
-                        Logger.getLogger(MetadataView.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(AboutController.class.getName()).log(Level.SEVERE, null, ex);
                     } catch (URISyntaxException ex) {
                         Logger.getLogger(AboutController.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -70,6 +70,9 @@ public class AboutController implements Initializable {
                     return true;
                 }
                 CharSequence name = node.getValue(TableColumn.NAME);
+                if (name == null) {
+                    return false;
+                }
                 switch (name.toString()) {
                     case "Versions":
                     case "Localization":

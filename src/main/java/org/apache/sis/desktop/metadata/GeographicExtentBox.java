@@ -19,7 +19,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.util.converter.FormatStringConverter;
 import org.apache.sis.measure.AngleFormat;
 import org.apache.sis.metadata.iso.extent.DefaultGeographicBoundingBox;
-import org.apache.sis.metadata.iso.extent.Extents;
 import org.opengis.metadata.extent.GeographicBoundingBox;
 
 /**

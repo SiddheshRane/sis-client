@@ -16,8 +16,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
 import javafx.beans.binding.Bindings;
-import javafx.beans.binding.BooleanBinding;
-import javafx.beans.binding.BooleanExpression;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -50,9 +48,7 @@ import org.apache.sis.storage.DataStores;
 import org.apache.sis.util.collection.TableColumn;
 import org.apache.sis.util.collection.TreeTable;
 import org.apache.sis.desktop.dnd.DndController;
-import org.apache.sis.desktop.metadata.GeographicExtentBox;
 import org.apache.sis.desktop.metadata.SummaryView;
-import org.apache.sis.metadata.iso.extent.DefaultGeographicBoundingBox;
 import org.opengis.metadata.Metadata;
 
 /**
@@ -181,7 +177,11 @@ public class AppController implements Initializable {
                 config.updateConfig();
                 config.saveConfig(prefBox.getValue());
             });
-
+            
+            Button delete = new Button("Delete");
+            delete.disableProperty().bind(prefBox.valueProperty().isEqualTo(Config.DEFAULT_CONFIG));
+            delete.setOnAction(ae-> config.deleteConfig(prefBox.getValue()));
+            
             prefBox.valueProperty().addListener((observable, oldValue, newValue) -> {
                 if (prefBox.getItems().contains(newValue)) {
                     config.loadConfig(newValue);
@@ -192,7 +192,7 @@ public class AppController implements Initializable {
                     System.out.println("new config " + newValue + " saved");
                 }
             });
-            HBox hBox = new HBox(summaryToggle, prefBox, save);
+            HBox hBox = new HBox(summaryToggle, prefBox, save, delete);
             hBox.getStyleClass().add("metadata-controls");
             VBox pane = new VBox(hBox, summary);
             VBox.setVgrow(table, Priority.ALWAYS);

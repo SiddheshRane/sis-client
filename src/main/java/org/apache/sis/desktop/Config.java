@@ -187,6 +187,7 @@ public class Config implements NodeChangeListener {
         } catch (BackingStoreException ex) {
             Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
         }
+        loadConfig(DEFAULT_CONFIG);
     }
 
     /**
