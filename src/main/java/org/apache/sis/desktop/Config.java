@@ -34,8 +34,10 @@ public class Config implements NodeChangeListener {
      * When the configuration for a node does not exist it is by default added
      * to the end of the table, expanded by default.
      */
-    private static final Data DEFAULT_DATA = new Data(Integer.MAX_VALUE, true, true);
-
+    private static final Data SHOW_ALL = new Data(Integer.MAX_VALUE, true, true);
+    private static final Data HIDE_MISSING = new Data(Integer.MAX_VALUE, false, false);
+    private Data DEFAULT_BEHAVIOUR = SHOW_ALL;
+    
     /*Default empty configuration that displays all data*/
     public static final String DEFAULT_CONFIG = "Default";
 
@@ -47,16 +49,16 @@ public class Config implements NodeChangeListener {
 
     private final Map<String, Data> map = new HashMap<>();
 
-    private final Predicate<TreeTable.Node> createTreeItemForNode = t -> map.getOrDefault(getNodePath(t), DEFAULT_DATA).createTreeItem;
+    private final Predicate<TreeTable.Node> createTreeItemForNode = t -> map.getOrDefault(getNodePath(t), DEFAULT_BEHAVIOUR).createTreeItem;
     private ObjectProperty<Predicate<TreeTable.Node>> createTreeItemForNodeProperty = new SimpleObjectProperty<>(createTreeItemForNode);
     public ObjectProperty<Predicate<TreeTable.Node>> createTreeItemForNodeProperty() {
         return createTreeItemForNodeProperty;
     }
 
-    private final Comparator<TreeTable.Node> userSortOrder = Comparator.comparingInt(node -> map.getOrDefault(getNodePath(node), DEFAULT_DATA).position);
+    private final Comparator<TreeTable.Node> userSortOrder = Comparator.comparingInt(node -> map.getOrDefault(getNodePath(node), DEFAULT_BEHAVIOUR).position);
     private ObjectProperty<Comparator<TreeTable.Node>> comparator = new SimpleObjectProperty<>(userSortOrder);
 
-    private final Predicate<TreeTable.Node> expandNodeByDefault = t -> map.getOrDefault(getNodePath(t), DEFAULT_DATA).expandBydefault;
+    private final Predicate<TreeTable.Node> expandNodeByDefault = t -> map.getOrDefault(getNodePath(t), DEFAULT_BEHAVIOUR).expandBydefault;
     private SimpleObjectProperty<Predicate<TreeTable.Node>> expandNodeProperty = new SimpleObjectProperty<>(expandNodeByDefault);
 
     private final ReadOnlyObjectWrapper<Boolean> configDirty = new ReadOnlyObjectWrapper<>(false);
@@ -98,6 +100,7 @@ public class Config implements NodeChangeListener {
         rootPreferences.addNodeChangeListener(this);
         table.setCreateTreeItemForNode(createTreeItemForNode);
         table.setExpandNode(expandNodeByDefault);
+        table.setOrder(userSortOrder);
         table.getRoot().addEventHandler(TreeItem.treeNotificationEvent(), e -> configDirty.set(true));
     }
 
@@ -117,12 +120,14 @@ public class Config implements NodeChangeListener {
             return;
         }
         if (name == DEFAULT_CONFIG) {
+            DEFAULT_BEHAVIOUR = SHOW_ALL;
             map.clear();
             table.updateRoot();
             configDirty.set(Boolean.FALSE);
             return;
         }
         Preferences pref = rootPreferences.node(name);
+        DEFAULT_BEHAVIOUR = HIDE_MISSING;
         map.clear();
         try {
             String[] keys = pref.keys();
