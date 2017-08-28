@@ -1,6 +1,7 @@
 package org.apache.sis.desktop.metadata;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
@@ -82,6 +83,21 @@ public class NodeTreeTable extends TreeTableView<TreeTable.Node> {
         }
     }
 
+    ObjectProperty<Comparator<TreeTable.Node>> order = new SimpleObjectProperty<>(Comparator.comparingInt(n->0));
+    /**
+     * the default order of sorting for rows of the tree table.
+     * @return 
+     */
+    public ObjectProperty<Comparator<TreeTable.Node>> orderProperty() {
+        return order;
+    }
+    public void setOrder(Comparator c) {
+        order.set(c);
+    }
+    public Comparator<TreeTable.Node> getOrder() {
+        return order.get();
+    }
+
     public NodeTreeTable(TreeTable treeTable) {
         this();
         setTreeTable(treeTable);
@@ -120,7 +136,7 @@ public class NodeTreeTable extends TreeTableView<TreeTable.Node> {
         //NAME column
         nameColumn = new TreeTableColumn<>(NAME.getHeader().toString());
         nameColumn.setCellValueFactory((param) -> {
-            String value = param.getValue().getValue().getValue(NAME).toString();
+            CharSequence value = param.getValue().getValue().getValue(NAME);
             return new SimpleStringProperty(Objects.toString(value, ""));
         });
 
@@ -200,6 +216,10 @@ public class NodeTreeTable extends TreeTableView<TreeTable.Node> {
             }
             if (!node.isLeaf()) {
                 createTreeItems(parent, node.getChildren());
+            }
+            if (parent.getChildren().size() > 1) {
+                Comparator<TreeItem<TreeTable.Node>> cp = Comparator.comparing(TreeItem<TreeTable.Node>::getValue, getOrder());
+                parent.getChildren().sort(cp);
             }
         }
     }
