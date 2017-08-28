@@ -106,7 +106,7 @@ public class NodeTreeTable extends TreeTableView<TreeTable.Node> {
         getStyleClass().add("node-tree-table");
         createTableColumns();
         setShowRoot(false);
-
+        setColumnResizePolicy(CONSTRAINED_RESIZE_POLICY);
         expandNodeProperty.addListener(ob -> expandNodes(getRoot()));
         addEventHandler(KeyEvent.KEY_PRESSED, shitfUpDown);
         MenuItem flatten = new MenuItem("Flatten");
