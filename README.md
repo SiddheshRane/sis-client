@@ -23,21 +23,21 @@ This repo is fixed purpose for this GSoC and is a work from scratch. All commits
  
 ###  State of the application
 
-Starting point of the application
+Starting point of the application  
 ![home screen](screenshots/sis-desktop-1.png)
 
-In the menu `Help` > `About` shows the following about screen. Certain nodes like `Localization` and `Versions` are expanded by default.
+In the menu `Help` > `About` shows the following about screen. Certain nodes like `Localization` and `Versions` are expanded by default.  
 ![about window](screenshots/sis-desktop-2.png)
 
 File listing pane. You can add files by either dragging them onto the application or opening them with file browser either through `File` > `Open` Menu or `Add New File` button.  
-The mime type of the file is detected using Apache SIS `DataStore`. If it cant be detected then the file system mime detection fallback is used which is marked with `*`.
+The mime type of the file is detected using Apache SIS `DataStore`. If it cant be detected then the file system mime detection fallback is used which is marked with `*`.  
 ![file pane populated](screenshots/sis-desktop-3.png)
 
 In the file pane if you right click (context menu) on a file and click on `Open metadata` menu then a metadata view tab is opened in Summary mode by default.  
-This shows some of the most important information that is required on a regular basis.
+This shows some of the most important information that is required on a regular basis.  
 ![metadata summary view](screenshots/sis-desktop-4.png)
 
-Toggling the `Summary` button switches to the Tree Table view which shows all metadata in a hierarchical manner. Specialized table cells allow editing metadata.
+Toggling the `Summary` button switches to the Tree Table view which shows all metadata in a hierarchical manner. Specialized table cells allow editing metadata.  
 ![metadata tree table view](screenshots/sis-desktop-5.png)
 
 The configuration combo box at the top shows a list of view configurations for the metadata.
@@ -57,12 +57,12 @@ On Linux it is stored as folder structure with xml files under `${user.home}/.ja
 On Windows it is stored in the Registry.
 
 Configurations are meant for the end user to create different views for different use cases, by simply interacting with the UI, without any programming.
-In the following screenshot I have created a *summary* config which is very similar to the Summary pane but with editing support.
+In the following screenshot I have created a *summary* config which is very similar to the Summary pane but with editing support.  
 ![metadata configuration](screenshots/sis-desktop-6.png)
 
-The CRS editor allows you to view an existing CRS, change it to something else by searching, and create custom crs by modifying any of the values in the editor.
+The CRS editor allows you to view an existing CRS, change it to something else by searching, and create custom crs by modifying any of the values in the editor.  
 ![crs editor](screenshots/sis-desktop-7.png)
-The crs list shows a list of all installed CRS definitions. You can then right click to view the CRS in the crs editor.
+The crs list shows a list of all installed CRS definitions. You can then right click to view the CRS in the crs editor.  
 ![crs list](screenshots/sis-desktop-8.png)
 
 ### Summary of features implemented
