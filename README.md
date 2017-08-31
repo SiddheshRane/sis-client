@@ -84,6 +84,12 @@ There is some work done for route and track display. Since most features are exp
 
 - Coordinate Transformation is incomplete. This component will deal with csv files and crs definitions. The CRS editor, Feature viewer (`WaypointsController`) and Files pane will simplify the creation of this component. The logical part already exists in `sis-console` module.
 
+### Integration in Apache SIS 
+
+The application will be integrated into the JDK9 branch because JDK9 modularization makes using javafx easier.
+Code will be merged piece by piece with incomplete components completed in the process. 
+Once integrated it will exist along side the sis-console module in the applications sub module of SIS. 
+
 ### Challenges 
 
 Apache SIS comes with excellent quality documentation. However software documentation is not a replacement for knowledge of the field.
